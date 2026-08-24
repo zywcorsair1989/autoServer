@@ -1,40 +1,40 @@
 """
-RAG Intelligent Q&A System - FastAPI Application
+食尚订智能问答系统 - FastAPI 应用程序
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-# Import models to ensure they are registered with Base
+# 导入模型以确保它们被注册到 Base 中
 from app.models import user, conversation, knowledge, document  # noqa: F401
 
 from app.api.v1.api import api_router
 
 app = FastAPI(
-    title="RAG Intelligent Q&A System",
-    description="A RAG-based intelligent Q&A system using Bailian AI",
+    title="食尚订智能问答系统",
+    description="基于 RAG 的智能问答系统，使用百炼 AI",
     version="1.0.0",
 )
 
-# Configure CORS
+# 配置 CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=["*"],  # 在生产环境中适当配置
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include API v1 router
+# 包含 API v1 路由
 app.include_router(api_router, prefix="/api/v1")
 
 
 @app.get("/")
 async def root():
-    """Root endpoint"""
-    return {"message": "RAG Intelligent Q&A System API", "version": "1.0.0"}
+    """根端点"""
+    return {"message": "食尚订智能问答系统 API", "version": "1.0.0"}
 
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
+    """健康检查端点"""
     return {"status": "healthy"}

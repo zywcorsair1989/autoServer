@@ -1,4 +1,4 @@
-"""Rerank Service - Bailian API Integration"""
+"""重排服务 - 百炼 API 集成"""
 
 import logging
 from typing import List, Dict
@@ -9,31 +9,31 @@ logger = logging.getLogger(__name__)
 
 
 class RerankService:
-    """Rerank Service using Bailian API"""
+    """使用百炼 API 的重排服务"""
 
     def __init__(self):
-        """Initialize Rerank Service with Bailian API configuration"""
+        """使用百炼 API 配置初始化重排服务"""
         self.api_key = settings.BAILIAN_API_KEY
         self.model = settings.BAILIAN_RERANK_MODEL
         self.base_url = "https://dashscope.aliyuncs.com/api/v1/services/rerank"
-        logger.info(f"Rerank Service initialized with model: {self.model}")
+        logger.info(f"重排服务使用模型 {self.model} 初始化")
 
     async def rerank(
         self, query: str, documents: List[str], top_n: int = 5
     ) -> List[Dict]:
         """
-        Rerank documents based on relevance to query
+        根据与查询的相关性重排文档
 
         Args:
-            query: Search query
-            documents: List of documents to rerank
-            top_n: Number of top results to return
+            query: 搜索查询
+            documents: 要重排的文档列表
+            top_n: 要返回的顶部结果数量
 
         Returns:
-            List of dicts with 'index', 'document', and 'relevance_score'
+            带 'index', 'document', 和 'relevance_score' 的字典列表
 
         Raises:
-            Exception: If API call fails
+            Exception: 如果 API 调用失败
         """
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
@@ -58,7 +58,7 @@ class RerankService:
                 response.raise_for_status()
                 result = response.json()
 
-                # Parse and format results
+                # 解析和格式化结果
                 reranked_results = []
                 for item in result["output"]["results"]:
                     reranked_results.append(
@@ -70,30 +70,30 @@ class RerankService:
                     )
 
                 logger.debug(
-                    f"Reranked {len(documents)} documents, returning top {len(reranked_results)}"
+                    f"重排了 {len(documents)} 个文档，返回顶部 {len(reranked_results)} 个"
                 )
                 return reranked_results
 
         except httpx.HTTPStatusError as e:
-            logger.error(f"Rerank API HTTP error: {e.response.status_code}")
-            raise Exception(f"Rerank API failed: {e.response.status_code}")
+            logger.error(f"重排 API HTTP 错误: {e.response.status_code}")
+            raise Exception(f"重排 API 失败: {e.response.status_code}")
         except Exception as e:
-            logger.error(f"Rerank failed: {str(e)}")
+            logger.error(f"重排失败: {str(e)}")
             raise
 
     async def rerank_with_scores(
         self, query: str, documents: List[str], top_n: int = 5
     ) -> List[tuple]:
         """
-        Rerank documents and return as tuples of (index, score, document)
+        重排文档并返回 (索引, 得分, 文档) 元组
 
         Args:
-            query: Search query
-            documents: List of documents to rerank
-            top_n: Number of top results to return
+            query: 搜索查询
+            documents: 要重排的文档列表
+            top_n: 要返回的顶部结果数量
 
         Returns:
-            List of tuples (index, relevance_score, document)
+            (索引, 相关得分, 文档) 元组列表
         """
         results = await self.rerank(query, documents, top_n)
         return [

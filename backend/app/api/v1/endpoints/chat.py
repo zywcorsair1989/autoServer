@@ -1,7 +1,7 @@
-"""Chat API endpoints.
+"""聊天 API 端点。
 
-This module provides REST API endpoints for chat operations,
-including conversation management and streaming chat.
+这个模块提供聊天操作的 REST API 端点，
+包括对话管理和流式聊天。
 """
 
 from typing import Optional
@@ -38,23 +38,23 @@ router = APIRouter(prefix="/chat", tags=["chat"])
     "/conversations",
     response_model=ConversationResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Create a new conversation",
-    description="Create a new conversation for the current user."
+    summary="创建新对话",
+    description="为当前用户创建新对话。"
 )
 async def create_conversation(
     conversation_data: ConversationCreate,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ) -> ConversationResponse:
-    """Create a new conversation.
+    """创建新对话。
 
     Args:
-        conversation_data: Conversation creation data.
-        current_user: Current authenticated user.
-        db: Database session.
+        conversation_data: 对话创建数据。
+        current_user: 当前认证用户。
+        db: 数据库会话。
 
     Returns:
-        Created conversation.
+        创建的对话。
     """
     service = ChatService(db)
     conversation = await service.create_conversation(
@@ -67,8 +67,8 @@ async def create_conversation(
 @router.get(
     "/conversations",
     response_model=ConversationList,
-    summary="List conversations",
-    description="List all conversations for the current user."
+    summary="列出对话",
+    description="列出当前用户的所有对话。"
 )
 async def list_conversations(
     skip: int = 0,
@@ -76,16 +76,16 @@ async def list_conversations(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ) -> ConversationList:
-    """List conversations for the current user.
+    """列出当前用户的对话。
 
     Args:
-        skip: Number of conversations to skip.
-        limit: Maximum number of conversations to return.
-        current_user: Current authenticated user.
-        db: Database session.
+        skip: 要跳过的对话数量。
+        limit: 要返回的最大对话数量。
+        current_user: 当前认证用户。
+        db: 数据库会话。
 
     Returns:
-        List of conversations with total count.
+        带有总数的对话列表。
     """
     service = ChatService(db)
     conversations, total = await service.list_conversations(
@@ -102,26 +102,26 @@ async def list_conversations(
 @router.get(
     "/conversations/{conversation_id}",
     response_model=ConversationDetail,
-    summary="Get conversation",
-    description="Get a specific conversation with its messages."
+    summary="获取对话",
+    description="获取特定对话及其消息。"
 )
 async def get_conversation(
     conversation_id: UUID,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ) -> ConversationDetail:
-    """Get a conversation by ID.
+    """通过 ID 获取对话。
 
     Args:
-        conversation_id: UUID of the conversation.
-        current_user: Current authenticated user.
-        db: Database session.
+        conversation_id: 对话的 UUID。
+        current_user: 当前认证用户。
+        db: 数据库会话。
 
     Returns:
-        Conversation with messages.
+        带有消息的对话。
 
     Raises:
-        HTTPException: If conversation not found.
+        HTTPException: 如果对话未找到。
     """
     service = ChatService(db)
     conversation = await service.get_conversation(conversation_id, current_user.id)
@@ -138,23 +138,23 @@ async def get_conversation(
 @router.delete(
     "/conversations/{conversation_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    summary="Delete conversation",
-    description="Delete a conversation and all its messages."
+    summary="删除对话",
+    description="删除对话及其所有消息。"
 )
 async def delete_conversation(
     conversation_id: UUID,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ) -> None:
-    """Delete a conversation.
+    """删除对话。
 
     Args:
-        conversation_id: UUID of the conversation to delete.
-        current_user: Current authenticated user.
-        db: Database session.
+        conversation_id: 要删除的对话的 UUID。
+        current_user: 当前认证用户。
+        db: 数据库会话。
 
     Raises:
-        HTTPException: If conversation not found.
+        HTTPException: 如果对话未找到。
     """
     service = ChatService(db)
     deleted = await service.delete_conversation(conversation_id, current_user.id)
@@ -169,33 +169,33 @@ async def delete_conversation(
 @router.post(
     "",
     response_model=ChatResponse,
-    summary="Send a chat message",
-    description="Send a message and get a response. Can use RAG for knowledge-based answers."
+    summary="发送聊天消息",
+    description="发送消息并获取响应。可以使用 RAG 获取基于知识的答案。"
 )
 async def chat(
     request: ChatRequest,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ) -> ChatResponse:
-    """Send a chat message and get a response.
+    """发送聊天消息并获取响应。
 
     Args:
-        request: Chat request with message and options.
-        current_user: Current authenticated user.
-        db: Database session.
+        request: 带有消息和选项的聊天请求。
+        current_user: 当前认证用户。
+        db: 数据库会话。
 
     Returns:
-        Chat response with message and optional sources.
+        带有消息和可选源的聊天响应。
 
     Raises:
-        HTTPException: If conversation not found or other error.
+        HTTPException: 如果对话未找到或其他错误。
     """
     chat_service = ChatService(db)
 
-    # Handle conversation
+    # 处理对话
     conversation_id = request.conversation_id
     if conversation_id is None:
-        # Create new conversation
+        # 创建新对话
         from app.schemas.chat import ConversationCreate
         conversation = await chat_service.create_conversation(
             current_user.id,
@@ -203,7 +203,7 @@ async def chat(
         )
         conversation_id = conversation.id
     else:
-        # Verify conversation exists
+        # 验证对话是否存在
         conversation = await chat_service.get_conversation(
             conversation_id,
             current_user.id
@@ -214,17 +214,17 @@ async def chat(
                 detail=f"对话 {conversation_id} 未找到"
             )
 
-    # Save user message
+    # 保存用户消息
     from app.schemas.chat import MessageCreate
     user_message = await chat_service.add_message(
         conversation_id,
         MessageCreate(role="user", content=request.message)
     )
 
-    # Get response
+    # 获取响应
     sources = None
     if request.use_knowledge and request.collection_id:
-        # Use RAG
+        # 使用 RAG
         try:
             embedding_service = EmbeddingService()
             llm_service = LLMService()
@@ -240,18 +240,18 @@ async def chat(
                 user_id=current_user.id
             )
         except Exception as e:
-            logger.error(f"RAG query failed: {str(e)}")
+            logger.error(f"RAG 查询失败: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="处理查询失败"
             )
     else:
-        # Direct LLM call
+        # 直接 LLM 调用
         try:
             llm_service = LLMService()
             history = await chat_service.get_conversation_history(conversation_id)
 
-            # Add system message if using conversation
+            # 如果使用对话则添加系统消息
             messages = history if history else []
             if not any(msg["role"] == "system" for msg in messages):
                 messages.insert(0, {
@@ -261,13 +261,13 @@ async def chat(
 
             response_text = await llm_service.generate(messages)
         except Exception as e:
-            logger.error(f"LLM generation failed: {str(e)}")
+            logger.error(f"LLM 生成失败: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="生成回复失败"
             )
 
-    # Save assistant message
+    # 保存助手消息
     assistant_message = await chat_service.add_message(
         conversation_id,
         MessageCreate(role="assistant", content=response_text)
@@ -281,33 +281,33 @@ async def chat(
 
 @router.post(
     "/stream",
-    summary="Stream chat response",
-    description="Send a message and get a streaming response."
+    summary="流式聊天响应",
+    description="发送消息并获取流式响应。"
 )
 async def stream_chat(
     request: ChatRequest,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """Stream a chat response.
+    """流式聊天响应。
 
     Args:
-        request: Chat request with message and options.
-        current_user: Current authenticated user.
-        db: Database session.
+        request: 带有消息和选项的聊天请求。
+        current_user: 当前认证用户。
+        db: 数据库会话。
 
     Yields:
-        Text chunks from the response stream.
+        来自响应流的文本块。
 
     Raises:
-        HTTPException: If conversation not found or other error.
+        HTTPException: 如果对话未找到或其他错误。
     """
     import json
     from fastapi.responses import StreamingResponse
 
     chat_service = ChatService(db)
 
-    # Handle conversation
+    # 处理对话
     conversation_id = request.conversation_id
     if conversation_id is None:
         from app.schemas.chat import ConversationCreate
@@ -327,7 +327,7 @@ async def stream_chat(
                 detail=f"对话 {conversation_id} 未找到"
             )
 
-    # Save user message
+    # 保存用户消息
     from app.schemas.chat import MessageCreate
     await chat_service.add_message(
         conversation_id,
@@ -335,7 +335,7 @@ async def stream_chat(
     )
 
     async def generate_stream():
-        """Generate streaming response."""
+        """生成流式响应。"""
         try:
             llm_service = LLMService()
             history = await chat_service.get_conversation_history(conversation_id)
@@ -352,7 +352,7 @@ async def stream_chat(
                 full_response += chunk
                 yield f"data: {json.dumps({'content': chunk})}\n\n"
 
-            # Save complete response
+            # 保存完整响应
             await chat_service.add_message(
                 conversation_id,
                 MessageCreate(role="assistant", content=full_response)
@@ -361,7 +361,7 @@ async def stream_chat(
             yield f"data: {json.dumps({'done': True})}\n\n"
 
         except Exception as e:
-            logger.error(f"Streaming failed: {str(e)}")
+            logger.error(f"流式传输失败: {str(e)}")
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
 
     return StreamingResponse(
