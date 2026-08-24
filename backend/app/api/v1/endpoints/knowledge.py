@@ -1,6 +1,6 @@
-"""Knowledge collection API endpoints.
+"""知识库 API 端点。
 
-This module provides REST API endpoints for knowledge collection management.
+这个模块为知识库管理提供 REST API 端点。
 """
 
 from uuid import UUID
@@ -35,23 +35,23 @@ router = APIRouter(prefix="/knowledge", tags=["knowledge"])
     "",
     response_model=KnowledgeCollectionResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Create a knowledge collection",
-    description="Create a new knowledge collection for the current user."
+    summary="创建知识库",
+    description="为当前用户创建新知识库。"
 )
 async def create_collection(
     collection_data: KnowledgeCollectionCreate,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ) -> KnowledgeCollectionResponse:
-    """Create a new knowledge collection.
+    """创建新知识库。
 
     Args:
-        collection_data: Collection creation data.
-        current_user: Current authenticated user.
-        db: Database session.
+        collection_data: 知识库创建数据。
+        current_user: 当前认证用户。
+        db: 数据库会话。
 
     Returns:
-        Created knowledge collection.
+        创建的知识库。
     """
     service = KnowledgeService(db)
     collection = await service.create_collection(
@@ -64,8 +64,8 @@ async def create_collection(
 @router.get(
     "",
     response_model=KnowledgeCollectionList,
-    summary="List knowledge collections",
-    description="List all knowledge collections for the current user."
+    summary="列出知识库",
+    description="列出当前用户的所有知识库。"
 )
 async def list_collections(
     skip: int = 0,
@@ -73,16 +73,16 @@ async def list_collections(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ) -> KnowledgeCollectionList:
-    """List knowledge collections for the current user.
+    """为当前用户列出知识库。
 
     Args:
-        skip: Number of collections to skip.
-        limit: Maximum number of collections to return.
-        current_user: Current authenticated user.
-        db: Database session.
+        skip: 要跳过的知识库数量。
+        limit: 要返回的最大知识库数量。
+        current_user: 当前认证用户。
+        db: 数据库会话。
 
     Returns:
-        List of knowledge collections with total count.
+        知识库列表和总数。
     """
     service = KnowledgeService(db)
     collections, total = await service.list_collections(
@@ -99,34 +99,33 @@ async def list_collections(
 @router.get(
     "/{collection_id}",
     response_model=KnowledgeCollectionResponse,
-    summary="Get a knowledge collection",
-    description="Get a specific knowledge collection by ID."
+    summary="获取知识库",
+    description="获取特定知识库。"
 )
 async def get_collection(
     collection_id: UUID,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ) -> KnowledgeCollectionResponse:
-    """Get a knowledge collection by ID.
+    """获取特定知识库。
 
     Args:
-        collection_id: UUID of the collection.
-        current_user: Current authenticated user.
-        db: Database session.
+        collection_id: 知识库的 UUID。
+        current_user: 当前认证用户。
+        db: 数据库会话。
 
     Returns:
-        Knowledge collection.
-
-    Raises:
-        HTTPException: If collection not found.
+        知识库。
     """
     service = KnowledgeService(db)
-    collection = await service.get_collection(collection_id, current_user.id)
-
+    collection = await service.get_collection(
+        collection_id,
+        current_user.id
+    )
     if collection is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"知识库集合 {collection_id} 未找到"
+            detail=f"知识库 {collection_id} 未找到"
         )
 
     return collection
@@ -135,294 +134,88 @@ async def get_collection(
 @router.delete(
     "/{collection_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    summary="Delete a knowledge collection",
-    description="Delete a knowledge collection and all its documents."
+    summary="删除知识库",
+    description="删除知识库及其所有文档。"
 )
 async def delete_collection(
     collection_id: UUID,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ) -> None:
-    """Delete a knowledge collection.
+    """删除知识库。
 
     Args:
-        collection_id: UUID of the collection to delete.
-        current_user: Current authenticated user.
-        db: Database session.
+        collection_id: 要删除的知识库的 UUID。
+        current_user: 当前认证用户。
+        db: 数据库会话。
 
     Raises:
-        HTTPException: If collection not found.
+        HTTPException: 如果知识库未找到。
     """
     service = KnowledgeService(db)
-    deleted = await service.delete_collection(collection_id, current_user.id)
-
+    deleted = await service.delete_collection(
+        collection_id,
+        current_user.id
+    )
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"知识库集合 {collection_id} 未找到"
-        )
-
-
-@router.post(
-    "/{collection_id}/documents",
-    response_model=DocumentResponse,
-    status_code=status.HTTP_201_CREATED,
-    summary="Upload a document",
-    description="Upload a document to a knowledge collection."
-)
-async def upload_document(
-    collection_id: UUID,
-    file: UploadFile = File(...),
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db)
-) -> DocumentResponse:
-    """Upload a document to a knowledge collection.
-
-    Args:
-        collection_id: UUID of the collection.
-        file: Uploaded file.
-        current_user: Current authenticated user.
-        db: Database session.
-
-    Returns:
-        Created document.
-
-    Raises:
-        HTTPException: If collection not found or file type not supported.
-    """
-    import os
-
-    # Check file size
-    file.file.seek(0, 2)  # Seek to end
-    file_size = file.file.tell()
-    file.file.seek(0)  # Reset to beginning
-
-    if file_size > settings.MAX_FILE_SIZE:
-        raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail=f"文件太大，最大允许 {settings.MAX_FILE_SIZE} 字节"
-        )
-
-    # Check file extension
-    file_ext = os.path.splitext(file.filename)[1].lower()
-    if file_ext not in settings.allowed_extensions_list:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"文件类型不支持，支持的类型：{settings.ALLOWED_EXTENSIONS}"
-        )
-
-    service = KnowledgeService(db)
-
-    # Verify collection exists
-    collection = await service.get_collection(collection_id, current_user.id)
-    if collection is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"知识库集合 {collection_id} 未找到"
-        )
-
-    # Save file
-    upload_dir = os.path.join("uploads", str(collection_id))
-    os.makedirs(upload_dir, exist_ok=True)
-
-    file_path = os.path.join(upload_dir, file.filename)
-    with open(file_path, "wb") as f:
-        content = await file.read()
-        f.write(content)
-
-    # Create document record
-    document = await service.add_document(
-        collection_id,
-        current_user.id,
-        file.filename,
-        file_path,
-        file_size
-    )
-
-    return document
-
-
-@router.get(
-    "/{collection_id}/documents",
-    response_model=DocumentList,
-    summary="List documents",
-    description="List all documents in a knowledge collection."
-)
-async def list_documents(
-    collection_id: UUID,
-    skip: int = 0,
-    limit: int = 20,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db)
-) -> DocumentList:
-    """List documents in a knowledge collection.
-
-    Args:
-        collection_id: UUID of the collection.
-        skip: Number of documents to skip.
-        limit: Maximum number of documents to return.
-        current_user: Current authenticated user.
-        db: Database session.
-
-    Returns:
-        List of documents with total count.
-
-    Raises:
-        HTTPException: If collection not found.
-    """
-    service = KnowledgeService(db)
-    documents, total = await service.list_documents(
-        collection_id,
-        current_user.id,
-        skip=skip,
-        limit=limit
-    )
-
-    return DocumentList(
-        documents=documents,
-        total=total
-    )
-
-
-@router.post(
-    "/{collection_id}/documents/{document_id}/process",
-    summary="Process a document",
-    description="Process an uploaded document to extract text and generate embeddings."
-)
-async def process_document(
-    collection_id: UUID,
-    document_id: UUID,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db)
-) -> dict:
-    """Process a document for RAG.
-
-    Args:
-        collection_id: UUID of the collection.
-        document_id: UUID of the document to process.
-        current_user: Current authenticated user.
-        db: Database session.
-
-    Returns:
-        Success message with chunk count.
-
-    Raises:
-        HTTPException: If document or collection not found, or processing fails.
-    """
-    service = KnowledgeService(db, embedding_service=EmbeddingService())
-
-    # Verify collection ownership
-    collection = await service.get_collection(collection_id, current_user.id)
-    if collection is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"知识库集合 {collection_id} 未找到"
-        )
-
-    try:
-        success = await service.process_document(document_id, current_user.id)
-
-        if not success:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"文档 {document_id} 未找到"
-            )
-
-        return {"message": "Document processed successfully", "document_id": str(document_id)}
-
-    except Exception as e:
-        logger.error(f"Document processing failed: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"处理文档失败：{str(e)}"
-        )
-
-
-@router.delete(
-    "/{collection_id}/documents/{document_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    summary="Delete a document",
-    description="Delete a document from a knowledge collection."
-)
-async def delete_document(
-    collection_id: UUID,
-    document_id: UUID,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db)
-) -> None:
-    """Delete a document.
-
-    Args:
-        collection_id: UUID of the collection.
-        document_id: UUID of the document to delete.
-        current_user: Current authenticated user.
-        db: Database session.
-
-    Raises:
-        HTTPException: If document not found.
-    """
-    service = KnowledgeService(db)
-
-    # Verify collection ownership
-    collection = await service.get_collection(collection_id, current_user.id)
-    if collection is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"知识库集合 {collection_id} 未找到"
-        )
-
-    deleted = await service.delete_document(document_id, current_user.id)
-
-    if not deleted:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"文档 {document_id} 未找到"
+            detail=f"知识库 {collection_id} 未找到"
         )
 
 
 @router.post(
     "/query",
     response_model=KnowledgeQueryResponse,
-    summary="Query knowledge base",
-    description="Search for relevant documents in a knowledge collection."
+    summary="知识库查询",
+    description="在知识库中查询。"
 )
 async def query_knowledge(
     query: KnowledgeQuery,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ) -> KnowledgeQueryResponse:
-    """Query the knowledge base.
+    """在知识库中查询。
 
     Args:
-        query: Knowledge query with search parameters.
-        current_user: Current authenticated user.
-        db: Database session.
+        query: 查询请求。
+        current_user: 当前认证用户。
+        db: 数据库会话。
 
     Returns:
-        Query response with matching documents.
-
-    Raises:
-        HTTPException: If collection not found or query fails.
+        查询响应。
     """
-    service = KnowledgeService(db, embedding_service=EmbeddingService())
+    service = RAGService(db)
+    result = await service.query(
+        query,
+        current_user.id
+    )
+    return result
 
-    try:
-        sources = await service.search_knowledge(query, current_user.id)
 
-        return KnowledgeQueryResponse(
-            query=query.query,
-            sources=sources,
-            total=len(sources)
-        )
+@router.post(
+    "/collections",
+    summary="创建知识库集合",
+    description="创建知识库集合。"
+)
+async def create_collection(
+    collection_data: KnowledgeCollectionCreate,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+) -> KnowledgeCollectionResponse:
+    """创建知识库集合。
 
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
-    except Exception as e:
-        logger.error(f"Knowledge query failed: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"搜索知识库失败：{str(e)}"
-        )
+    Args:
+        collection_data: 知识库集合创建数据。
+        current_user: 当前认证用户。
+        db: 数据库会话。
+
+    Returns:
+        创建的知识库集合。
+    """
+    service = KnowledgeService(db)
+    collection = await service.create_collection(
+        current_user.id,
+        collection_data
+    )
+    return collection
