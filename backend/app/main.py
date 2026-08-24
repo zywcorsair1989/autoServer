@@ -4,6 +4,9 @@ RAG Intelligent Q&A System - FastAPI Application
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+# Import models to ensure they are registered with Base
+from app.models import user, conversation, knowledge, document  # noqa: F401
+
 from app.api.v1.api import api_router
 
 app = FastAPI(
