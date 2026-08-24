@@ -126,7 +126,7 @@ async def get_collection(
     if collection is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Knowledge collection {collection_id} not found"
+            detail=f"知识库集合 {collection_id} 未找到"
         )
 
     return collection
@@ -159,7 +159,7 @@ async def delete_collection(
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Knowledge collection {collection_id} not found"
+            detail=f"知识库集合 {collection_id} 未找到"
         )
 
 
@@ -200,7 +200,7 @@ async def upload_document(
     if file_size > settings.MAX_FILE_SIZE:
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail=f"File too large. Maximum size is {settings.MAX_FILE_SIZE} bytes"
+            detail=f"文件太大，最大允许 {settings.MAX_FILE_SIZE} 字节"
         )
 
     # Check file extension
@@ -208,7 +208,7 @@ async def upload_document(
     if file_ext not in settings.allowed_extensions_list:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"File type not supported. Allowed types: {settings.ALLOWED_EXTENSIONS}"
+            detail=f"文件类型不支持，支持的类型：{settings.ALLOWED_EXTENSIONS}"
         )
 
     service = KnowledgeService(db)
@@ -218,7 +218,7 @@ async def upload_document(
     if collection is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Knowledge collection {collection_id} not found"
+            detail=f"知识库集合 {collection_id} 未找到"
         )
 
     # Save file
@@ -316,7 +316,7 @@ async def process_document(
     if collection is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Knowledge collection {collection_id} not found"
+            detail=f"知识库集合 {collection_id} 未找到"
         )
 
     try:
@@ -325,7 +325,7 @@ async def process_document(
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Document {document_id} not found"
+                detail=f"文档 {document_id} 未找到"
             )
 
         return {"message": "Document processed successfully", "document_id": str(document_id)}
@@ -334,7 +334,7 @@ async def process_document(
         logger.error(f"Document processing failed: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to process document: {str(e)}"
+            detail=f"处理文档失败：{str(e)}"
         )
 
 
@@ -368,7 +368,7 @@ async def delete_document(
     if collection is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Knowledge collection {collection_id} not found"
+            detail=f"知识库集合 {collection_id} 未找到"
         )
 
     deleted = await service.delete_document(document_id, current_user.id)
@@ -376,7 +376,7 @@ async def delete_document(
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Document {document_id} not found"
+            detail=f"文档 {document_id} 未找到"
         )
 
 
@@ -424,5 +424,5 @@ async def query_knowledge(
         logger.error(f"Knowledge query failed: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to search knowledge base: {str(e)}"
+            detail=f"搜索知识库失败：{str(e)}"
         )

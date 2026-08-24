@@ -129,7 +129,7 @@ async def get_conversation(
     if conversation is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Conversation {conversation_id} not found"
+            detail=f"对话 {conversation_id} 未找到"
         )
 
     return conversation
@@ -162,7 +162,7 @@ async def delete_conversation(
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Conversation {conversation_id} not found"
+            detail=f"对话 {conversation_id} 未找到"
         )
 
 
@@ -211,7 +211,7 @@ async def chat(
         if conversation is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Conversation {conversation_id} not found"
+                detail=f"对话 {conversation_id} 未找到"
             )
 
     # Save user message
@@ -243,7 +243,7 @@ async def chat(
             logger.error(f"RAG query failed: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to process query"
+                detail="处理查询失败"
             )
     else:
         # Direct LLM call
@@ -264,7 +264,7 @@ async def chat(
             logger.error(f"LLM generation failed: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to generate response"
+                detail="生成回复失败"
             )
 
     # Save assistant message
@@ -324,7 +324,7 @@ async def stream_chat(
         if conversation is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Conversation {conversation_id} not found"
+                detail=f"对话 {conversation_id} 未找到"
             )
 
     # Save user message

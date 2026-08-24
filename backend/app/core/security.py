@@ -126,7 +126,7 @@ async def get_current_user(
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
+        detail="无法验证凭据",
         headers={"WWW-Authenticate": "Bearer"},
     )
 
@@ -167,7 +167,7 @@ async def get_current_active_user(
     if not current_user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Inactive user"
+            detail="用户已被禁用"
         )
     return current_user
 
@@ -191,7 +191,7 @@ def require_role(role: str) -> Callable:
         if current_user.role != role:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Operation requires '{role}' role"
+                detail=f"此操作需要 '{role}' 角色"
             )
         return current_user
 

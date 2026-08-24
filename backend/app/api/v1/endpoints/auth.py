@@ -92,14 +92,14 @@ async def login(
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
+            detail="用户名或密码错误",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Inactive user account"
+            detail="用户账号已被禁用"
         )
 
     # Create access token
@@ -166,7 +166,7 @@ async def change_password(
             password_data.current_password,
             password_data.new_password
         )
-        return {"message": "Password changed successfully"}
+        return {"message": "密码修改成功"}
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
