@@ -1,31 +1,31 @@
 <template>
   <div class="login-container">
     <div class="login-box">
-      <h1>RAG Intelligent Q&A System</h1>
+      <h1>食尚订AI客服</h1>
 
       <div class="tabs">
-        <button :class="{ active: isLogin }" @click="isLogin = true">Login</button>
-        <button :class="{ active: !isLogin }" @click="isLogin = false">Register</button>
+        <button :class="{ active: isLogin }" @click="isLogin = true">登录</button>
+        <button :class="{ active: !isLogin }" @click="isLogin = false">注册</button>
       </div>
 
       <form @submit.prevent="handleSubmit">
         <div class="form-group">
-          <label>Username</label>
+          <label>用户名</label>
           <input v-model="username" type="text" required />
         </div>
 
         <div v-if="!isLogin" class="form-group">
-          <label>Email</label>
+          <label>邮箱</label>
           <input v-model="email" type="email" required />
         </div>
 
         <div class="form-group">
-          <label>Password</label>
+          <label>密码</label>
           <input v-model="password" type="password" required />
         </div>
 
         <button type="submit" class="submit-btn">
-          {{ isLogin ? 'Login' : 'Register' }}
+          {{ isLogin ? '登录' : '注册' }}
         </button>
 
         <p v-if="error" class="error">{{ error }}</p>
@@ -69,7 +69,7 @@ export default {
           router.push('/home')
         }
       } catch (err) {
-        error.value = err.response?.data?.detail || 'An error occurred'
+        error.value = err.response?.data?.detail || '发生错误'
       }
     }
 

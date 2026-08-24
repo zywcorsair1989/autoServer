@@ -1,9 +1,9 @@
 <template>
   <div class="knowledge-page">
     <div class="header">
-      <h2>Knowledge Base Management</h2>
+      <h2>知识库管理</h2>
       <button @click="showCreateDialog = true" class="create-btn">
-        + New Collection
+        + 新建集合
       </button>
     </div>
 
@@ -17,11 +17,11 @@
 
         <div class="card-actions">
           <input type="file" @change="(e) => uploadFile(collection.id, e)" accept=".pdf,.docx,.txt" />
-          <button @click="openQueryDialog(collection)" class="query-btn">Query</button>
+          <button @click="openQueryDialog(collection)" class="query-btn">查询</button>
         </div>
 
         <div v-if="documents[collection.id]" class="documents-list">
-          <h4>Documents ({{ documents[collection.id].length }})</h4>
+          <h4>文档 ({{ documents[collection.id].length }})</h4>
           <div
             v-for="doc in documents[collection.id]"
             :key="doc.id"
@@ -34,36 +34,36 @@
       </div>
     </div>
 
-    <!-- Create Collection Dialog -->
+    <!-- 创建集合对话框 -->
     <div v-if="showCreateDialog" class="dialog-overlay" @click="showCreateDialog = false">
       <div class="dialog" @click.stop>
-        <h3>Create New Collection</h3>
-        <input v-model="newCollection.name" placeholder="Collection Name" />
-        <textarea v-model="newCollection.description" placeholder="Description"></textarea>
+        <h3>创建新集合</h3>
+        <input v-model="newCollection.name" placeholder="集合名称" />
+        <textarea v-model="newCollection.description" placeholder="描述"></textarea>
         <div class="dialog-actions">
-          <button @click="createCollection" class="primary-btn">Create</button>
-          <button @click="showCreateDialog = false">Cancel</button>
+          <button @click="createCollection" class="primary-btn">创建</button>
+          <button @click="showCreateDialog = false">取消</button>
         </div>
       </div>
     </div>
 
-    <!-- Query Dialog -->
+    <!-- 查询对话框 -->
     <div v-if="showQueryDialog" class="dialog-overlay" @click="showQueryDialog = false">
       <div class="dialog query-dialog" @click.stop>
-        <h3>Query: {{ selectedCollection?.name }}</h3>
-        <textarea v-model="queryText" placeholder="Enter your question..."></textarea>
+        <h3>查询: {{ selectedCollection?.name }}</h3>
+        <textarea v-model="queryText" placeholder="请输入您的问题..."></textarea>
         <div v-if="queryResult" class="query-result">
-          <h4>Answer:</h4>
+          <h4>答案:</h4>
           <p>{{ queryResult.answer }}</p>
-          <h4>Sources:</h4>
+          <h4>来源:</h4>
           <div v-for="source in queryResult.sources" :key="source.document_id" class="source">
-            <p><strong>{{ source.filename }}</strong> (Score: {{ source.score.toFixed(2) }})</p>
+            <p><strong>{{ source.filename }}</strong> (得分: {{ source.score.toFixed(2) }})</p>
             <p>{{ source.content }}</p>
           </div>
         </div>
         <div class="dialog-actions">
-          <button @click="executeQuery" class="primary-btn">Query</button>
-          <button @click="showQueryDialog = false">Close</button>
+          <button @click="executeQuery" class="primary-btn">查询</button>
+          <button @click="showQueryDialog = false">关闭</button>
         </div>
       </div>
     </div>
@@ -94,7 +94,7 @@ export default {
       const response = await knowledgeApi.getCollections()
       collections.value = response.items
 
-      // Load documents for each collection
+      // 为每个集合加载文档
       for (const collection of collections.value) {
         const docs = await knowledgeApi.getDocuments(collection.id)
         documents[collection.id] = docs.items
@@ -114,7 +114,7 @@ export default {
     }
 
     const deleteCollection = async (id) => {
-      if (confirm('Delete this collection?')) {
+      if (confirm('删除这个集合?')) {
         await knowledgeApi.deleteCollection(id)
         await loadCollections()
       }

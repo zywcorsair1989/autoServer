@@ -2,8 +2,8 @@
   <div class="chat-page">
     <div class="sidebar">
       <div class="sidebar-header">
-        <h3>Conversations</h3>
-        <button @click="createNewConversation" class="new-btn">+ New</button>
+        <h3>对话</h3>
+        <button @click="createNewConversation" class="new-btn">+ 新建</button>
       </div>
 
       <div class="conversation-list">
@@ -27,7 +27,7 @@
         @send-message="handleSendMessage"
       />
       <div v-else class="no-conversation">
-        <p>Select a conversation or create a new one</p>
+        <p>选择一个对话或创建一个新对话</p>
       </div>
     </div>
   </div>
@@ -54,7 +54,7 @@ export default {
     }
 
     const createNewConversation = async () => {
-      const conv = await chatApi.createConversation('New Conversation')
+      const conv = await chatApi.createConversation('新对话')
       conversations.value.unshift(conv)
       selectConversation(conv)
     }

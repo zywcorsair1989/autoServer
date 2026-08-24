@@ -14,10 +14,10 @@
       <textarea
         v-model="inputMessage"
         @keydown.enter.prevent="sendMessage"
-        placeholder="Type your message..."
+        placeholder="请输入消息..."
         rows="3"
       ></textarea>
-      <button @click="sendMessage" class="send-btn">Send</button>
+      <button @click="sendMessage" class="send-btn">发送</button>
     </div>
   </div>
 </template>

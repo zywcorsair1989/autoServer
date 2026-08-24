@@ -1,35 +1,35 @@
 <template>
   <div class="home-container">
     <nav class="navbar">
-      <h2>RAG Q&A System</h2>
+      <h2>食尚订AI客服</h2>
       <div class="nav-links">
-        <router-link to="/chat">Chat</router-link>
-        <router-link to="/knowledge">Knowledge</router-link>
-        <button @click="logout" class="logout-btn">Logout</button>
+        <router-link to="/chat">聊天</router-link>
+        <router-link to="/knowledge">知识库</router-link>
+        <button @click="logout" class="logout-btn">退出登录</button>
       </div>
     </nav>
 
     <div class="welcome-section">
-      <h1>Welcome to RAG Intelligent Q&A System</h1>
-      <p>A powerful AI-powered question answering system with knowledge base management</p>
+      <h1>欢迎使用食尚订AI客服</h1>
+      <p>一个强大的AI驱动的问答系统，具备知识库管理功能</p>
 
       <div class="feature-cards">
         <div class="card">
-          <h3>Smart Chat</h3>
-          <p>Have intelligent conversations with AI powered by your knowledge base</p>
-          <router-link to="/chat" class="card-link">Start Chatting</router-link>
+          <h3>智能聊天</h3>
+          <p>与AI进行智能对话，由您的知识库提供支持</p>
+          <router-link to="/chat" class="card-link">开始聊天</router-link>
         </div>
 
         <div class="card">
-          <h3>Knowledge Base</h3>
-          <p>Upload and manage documents to build your knowledge base</p>
-          <router-link to="/knowledge" class="card-link">Manage Knowledge</router-link>
+          <h3>知识库</h3>
+          <p>上传和管理文档以构建您的知识库</p>
+          <router-link to="/knowledge" class="card-link">管理知识库</router-link>
         </div>
 
         <div class="card">
-          <h3>RAG Technology</h3>
-          <p>Advanced retrieval-augmented generation for accurate answers</p>
-          <router-link to="/chat" class="card-link">Try It Now</router-link>
+          <h3>RAG技术</h3>
+          <p>先进的检索增强生成技术，提供准确的答案</p>
+          <router-link to="/chat" class="card-link">立即体验</router-link>
         </div>
       </div>
     </div>
