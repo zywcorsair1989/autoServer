@@ -1,4 +1,4 @@
-"""Pydantic schemas for chat and conversation management."""
+"""Pydantic 模式，用于聊天和对话管理。"""
 
 from datetime import datetime
 from typing import List, Optional
@@ -7,22 +7,22 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 
-# Message schemas
+# 消息模式
 class MessageBase(BaseModel):
-    """Base message schema with common fields."""
+    """带常用字段的消息基础模式。"""
 
     role: str = Field(..., min_length=1, max_length=20)
     content: str = Field(..., min_length=1)
 
 
 class MessageCreate(MessageBase):
-    """Schema for creating a message."""
+    """创建消息的模式。"""
 
     pass
 
 
 class MessageResponse(MessageBase):
-    """Schema for message response data."""
+    """消息响应数据的模式。"""
 
     id: UUID
     conversation_id: UUID
@@ -31,21 +31,21 @@ class MessageResponse(MessageBase):
     model_config = {"from_attributes": True}
 
 
-# Conversation schemas
+# 对话模式
 class ConversationBase(BaseModel):
-    """Base conversation schema with common fields."""
+    """带常用字段的对话基础模式。"""
 
-    title: str = Field(default="New Conversation", min_length=1, max_length=200)
+    title: str = Field(default="新对话", min_length=1, max_length=200)
 
 
 class ConversationCreate(ConversationBase):
-    """Schema for creating a conversation."""
+    """创建对话的模式。"""
 
     pass
 
 
 class ConversationResponse(ConversationBase):
-    """Schema for conversation response data."""
+    """对话响应数据的模式。"""
 
     id: UUID
     user_id: UUID
@@ -56,21 +56,21 @@ class ConversationResponse(ConversationBase):
 
 
 class ConversationDetail(ConversationResponse):
-    """Schema for conversation with messages."""
+    """带消息的对话模式。"""
 
     messages: List[MessageResponse] = []
 
 
 class ConversationList(BaseModel):
-    """Schema for list of conversations."""
+    """对话列表的模式。"""
 
     conversations: List[ConversationResponse]
     total: int
 
 
-# Chat API schemas
+# 聊天 API 模式
 class ChatRequest(BaseModel):
-    """Schema for chat API request."""
+    """聊天 API 请求的模式。"""
 
     message: str = Field(..., min_length=1)
     conversation_id: Optional[UUID] = None
@@ -79,14 +79,14 @@ class ChatRequest(BaseModel):
 
 
 class ChatResponse(BaseModel):
-    """Schema for chat API response."""
+    """聊天 API 响应的模式。"""
 
     message: MessageResponse
     sources: Optional[List["SourceDocument"]] = None
 
 
-# Import forward reference
+# 导入前向引用
 from app.schemas.knowledge import SourceDocument
 
-# Update forward references
+# 更新前向引用
 ChatResponse.model_rebuild()

@@ -1,4 +1,4 @@
-"""User model for the RAG system."""
+"""用户模型，用于 RAG 系统。"""
 
 from datetime import datetime
 from uuid import uuid4
@@ -11,7 +11,7 @@ from app.core.database import Base
 
 
 class User(Base):
-    """User model for authentication and ownership."""
+    """用于认证和所有权的用户模型。"""
 
     __tablename__ = "users"
 
@@ -59,7 +59,7 @@ class User(Base):
         onupdate=datetime.utcnow
     )
 
-    # Relationships - use lazy="selectin" for async compatibility
+    # 关系 - 使用 lazy="selectin" 以兼容异步
     conversations = relationship(
         "Conversation",
         back_populates="user",
@@ -73,7 +73,7 @@ class User(Base):
         lazy="selectin"
     )
 
-    # Indexes
+    # 索引
     __table_args__ = (
         Index('ix_users_username', 'username'),
         Index('ix_users_email', 'email'),

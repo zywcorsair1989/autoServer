@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.orm import declarative_base
 from app.core.config import settings
 
-# Create async engine
+# 创建异步引擎
 engine = create_async_engine(
     settings.DATABASE_URL,
     pool_size=20,
@@ -12,7 +12,7 @@ engine = create_async_engine(
     echo=settings.DEBUG
 )
 
-# Create async session factory
+# 创建异步会话工厂
 async_session_factory = async_sessionmaker(
     engine,
     class_=AsyncSession,
@@ -21,12 +21,12 @@ async_session_factory = async_sessionmaker(
     autoflush=False
 )
 
-# Base class for models
+# 模型的基础类
 Base = declarative_base()
 
 
 async def get_db() -> AsyncSession:
-    """Dependency for getting database session"""
+    """获取数据库会话的依赖项"""
     async with async_session_factory() as session:
         try:
             yield session
@@ -35,11 +35,11 @@ async def get_db() -> AsyncSession:
 
 
 async def init_db():
-    """Initialize database (create all tables)"""
+    """初始化数据库（创建所有表）"""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
 
 async def close_db():
-    """Close database connections"""
+    """关闭数据库连接"""
     await engine.dispose()

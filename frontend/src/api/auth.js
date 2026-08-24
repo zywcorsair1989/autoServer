@@ -5,7 +5,7 @@ const api = axios.create({
   timeout: 10000
 })
 
-// Request interceptor to add token
+// 请求拦截器添加令牌
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('token')
   if (token) {
@@ -14,7 +14,7 @@ api.interceptors.request.use(config => {
   return config
 })
 
-// Response interceptor for error handling
+// 响应拦截器处理错误
 api.interceptors.response.use(
   response => response,
   error => {

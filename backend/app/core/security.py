@@ -1,8 +1,7 @@
-"""Security module for password hashing, JWT token management, and authentication dependencies."""
+"""安全模块，提供密码哈希、JWT 令牌管理和认证依赖项。"""
 
 from datetime import datetime, timedelta
 from typing import Optional, Callable
-from functools import wraps
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -16,52 +15,52 @@ from app.core.database import get_db
 from app.models.user import User
 from app.schemas.user import TokenData
 
-# Password hashing context
+# 密码哈希上下文
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# OAuth2 scheme for token authentication
+# 用于令牌认证的 OAuth2 方案
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
 def get_password_hash(password: str) -> str:
-    """Hash a password using bcrypt.
+    """使用 bcrypt 对密码进行哈希。
 
     Args:
-        password: Plain text password to hash.
+        password: 要哈希的明文密码。
 
     Returns:
-        Hashed password string.
+        哈希密码字符串。
     """
-    # bcrypt has a 72-byte password length limit
-    # Truncate to 72 characters to ensure it doesn't exceed byte limit
-    # since some characters take multiple bytes in UTF-8
+    # bcrypt 有 72 字节的密码长度限制
+    # 截断为 72 个字符以确保不超过字节限制
+    # 因为某些字符在 UTF-8 中占用多个字节
     if len(password.encode('utf-8')) > 72:
         password = password.encode('utf-8')[:72].decode('utf-8', errors='ignore')
     return pwd_context.hash(password)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a password against its hash.
+    """验证密码与其哈希。
 
     Args:
-        plain_password: Plain text password to verify.
-        hashed_password: Hashed password to compare against.
+        plain_password: 要验证的明文密码。
+        hashed_password: 用来比较的哈希密码。
 
     Returns:
-        True if password matches, False otherwise.
+        密码匹配则返回 True，否则返回 False。
     """
     return pwd_context.verify(plain_password, hashed_password)
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    """Create a JWT access token.
+    """创建 JWT 访问令牌。
 
     Args:
-        data: Payload data to encode in the token.
-        expires_delta: Optional custom expiration time delta.
+        data: 要在令牌中编码的有效载荷数据。
+        expires_delta: 可选的自定义过期时间。
 
     Returns:
-        Encoded JWT token string.
+        编码的 JWT 令牌字符串。
     """
     to_encode = data.copy()
 
@@ -83,13 +82,13 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 
 
 def decode_token(token: str) -> Optional[TokenData]:
-    """Decode and validate a JWT token.
+    """解码和验证 JWT 令牌。
 
     Args:
-        token: JWT token string to decode.
+        token: 要解码的 JWT 令牌字符串。
 
     Returns:
-        TokenData object if valid, None otherwise.
+        令牌有效则返回 TokenData 对象，否则返回 None。
     """
     try:
         payload = jwt.decode(
@@ -117,17 +116,17 @@ async def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: AsyncSession = Depends(get_db)
 ) -> User:
-    """Get the current authenticated user from a JWT token.
+    """从 JWT 令牌获取当前认证的用户。
 
     Args:
-        token: JWT token from the Authorization header.
-        db: Database session dependency.
+        token: 授权头的 JWT 令牌。
+        db: 数据库会话依赖项。
 
     Returns:
-        User object if authentication successful.
+        认证成功则返回 User 对象。
 
     Raises:
-        HTTPException: If token is invalid or user not found.
+        HTTPException: 如果令牌无效或用户未找到。
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -141,7 +140,7 @@ async def get_current_user(
         raise credentials_exception
 
     try:
-        # Query user by ID
+        # 挥用户 ID
         result = await db.execute(
             select(User).where(User.id == token_data.user_id)
         )
@@ -158,16 +157,16 @@ async def get_current_user(
 async def get_current_active_user(
     current_user: User = Depends(get_current_user)
 ) -> User:
-    """Get the current active user.
+    """获取当前活跃用户。
 
     Args:
-        current_user: Current authenticated user dependency.
+        current_user: 当前认证用户依赖项。
 
     Returns:
-        User object if active.
+        用户活跃则返回 User 对象。
 
     Raises:
-        HTTPException: If user is inactive.
+        HTTPException: 如果用户非活跃。
     """
     if not current_user.is_active:
         raise HTTPException(
@@ -178,16 +177,16 @@ async def get_current_active_user(
 
 
 def require_role(role: str) -> Callable:
-    """Create a dependency that checks if the user has the required role.
+    """创建检查用户是否具有所需角色的依赖项。
 
     Args:
-        role: Required role string (e.g., "admin", "user").
+        role: 需要的角色字符串（例如 "admin", "user"）。
 
     Returns:
-        Dependency function that validates the role.
+        验证角色的依赖项函数。
 
     Raises:
-        HTTPException: If user doesn't have the required role.
+        HTTPException: 如果用户不具有所需角色。
     """
 
     async def role_checker(

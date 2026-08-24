@@ -1,4 +1,4 @@
-"""Conversation and Message models for the RAG system."""
+"""对话和消息模型，用于 RAG 系统。"""
 
 from datetime import datetime
 from uuid import uuid4
@@ -11,7 +11,7 @@ from app.core.database import Base
 
 
 class Conversation(Base):
-    """Conversation model for chat sessions."""
+    """对话模型，用于聊天会话。"""
 
     __tablename__ = "conversations"
 
@@ -30,7 +30,7 @@ class Conversation(Base):
     title: Mapped[str] = mapped_column(
         String(200),
         nullable=False,
-        default="New Conversation"
+        default="新对话"
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
@@ -44,7 +44,7 @@ class Conversation(Base):
         onupdate=datetime.utcnow
     )
 
-    # Relationships - use lazy="selectin" for async compatibility
+    # 关系 - 使用 lazy="selectin" 以兼容异步
     user = relationship(
         "User",
         back_populates="conversations",
@@ -58,7 +58,7 @@ class Conversation(Base):
         lazy="selectin"
     )
 
-    # Indexes
+    # 索引
     __table_args__ = (
         Index('ix_conversations_user_id', 'user_id'),
     )
@@ -68,7 +68,7 @@ class Conversation(Base):
 
 
 class Message(Base):
-    """Message model for individual chat messages."""
+    """单个聊天消息的模型。"""
 
     __tablename__ = "messages"
 
@@ -98,14 +98,14 @@ class Message(Base):
         default=datetime.utcnow
     )
 
-    # Relationships - use lazy="selectin" for async compatibility
+    # 关系 - 使用 lazy="selectin" 以兼容异步
     conversation = relationship(
         "Conversation",
         back_populates="messages",
         lazy="selectin"
     )
 
-    # Indexes
+    # 索引
     __table_args__ = (
         Index('ix_messages_conversation_id', 'conversation_id'),
     )

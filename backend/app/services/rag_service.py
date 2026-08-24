@@ -1,10 +1,10 @@
-"""RAG Service for complete RAG pipeline.
+"""RAG 服务，提供完整的 RAG 管道。
 
-This module provides the main RAG pipeline that combines:
-- Embedding generation
-- Vector search
-- Optional reranking
-- LLM response generation
+这个模块提供结合了以下功能的主要 RAG 管道：
+- 嵛入向量生成
+- 向量搜索
+- 可选的重排
+- LLM 回复生成
 """
 
 import logging
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 class RAGService:
-    """RAG Service for end-to-end retrieval-augmented generation."""
+    """端到端检索増强生成的 RAG 服务。"""
 
     def __init__(
         self,
@@ -32,13 +32,13 @@ class RAGService:
         embedding_service: Optional[EmbeddingService] = None,
         rerank_service: Optional[RerankService] = None
     ):
-        """Initialize RAG Service.
+        """初始化 RAG 服务。
 
         Args:
-            db: AsyncSession for database operations.
-            llm_service: LLM service for response generation.
-            embedding_service: Embedding service for vector operations.
-            rerank_service: Optional rerank service for result reranking.
+            db: 用于数据库操作的 AsyncSession。
+            llm_service: 用于回復生成的 LLM 服务。
+            embedding_service: 用于向量操作的嵌入服务。
+            rerank_service: 可选的用于结果重排的重排服务。
         """
         self.db = db
         self.llm_service = llm_service or LLMService()
@@ -58,25 +58,25 @@ class RAGService:
         rerank: bool = False,
         temperature: float = 0.7
     ) -> Tuple[str, Optional[List[SourceDocument]]]:
-        """Execute a RAG query.
+        """执行 RAG 查询。
 
         Args:
-            query: The user's question.
-            collection_id: UUID of the knowledge collection to search.
-            user_id: UUID of the user making the query.
-            top_k: Number of documents to retrieve.
-            rerank: Whether to rerank results.
-            temperature: LLM temperature for generation.
+            query: 用户的问题。
+            collection_id: 要搜索的知识库集合的 UUID。
+            user_id: 进行查询的用户的 UUID。
+            top_k: 要检索的文档数量。
+            rerank: 是否重排结果。
+            temperature: 生成的 LLM 温度。
 
         Returns:
-            Tuple of (response text, list of source documents).
+            (回復文本, 源文档列表) 的元组。
 
         Raises:
-            ValueError: If collection not found or other error.
+            ValueError: 如果集合未找到或其他错误。
         """
-        logger.info(f"RAG query from user {user_id}: {query[:50]}...")
+        logger.info(f"来自用户 {user_id} 的 RAG 查询: {query[:50]}...")
 
-        # Step 1: Retrieve relevant documents
+        # 步骤 1: 检索相关文档
         knowledge_query = KnowledgeQuery(
             query=query,
             collection_id=collection_id,
@@ -90,8 +90,8 @@ class RAGService:
         )
 
         if not sources:
-            # No relevant documents found
-            logger.warning(f"No documents found for query in collection {collection_id}")
+            # 未找到相关文档
+            logger.warning(f"在集合 {collection_id} 中未找到查询的文档")
             response = await self.llm_service.generate(
                 messages=[
                     {"role": "system", "content": "You are a helpful AI assistant."},
@@ -101,12 +101,12 @@ class RAGService:
             )
             return response, None
 
-        # Step 2: Optional reranking
+        # 步骤 2: 可选重排
         if rerank and self.rerank_service:
             documents = [source.content for source in sources]
             reranked = await self.rerank_service.rerank(query, documents, top_n=top_k)
 
-            # Reorder sources based on reranking
+            # 根据重排结果重新排序源
             reranked_sources = []
             for item in reranked:
                 idx = item["index"]
@@ -115,10 +115,10 @@ class RAGService:
                 reranked_sources.append(source)
             sources = reranked_sources
 
-        # Step 3: Build context from retrieved documents
+        # 步骤 3: 从检索的文档建立上下文
         context = self._build_context(sources)
 
-        # Step 4: Generate response using LLM
+        # 步骤 4: 使用 LLM 生成回復
         system_prompt = self._build_system_prompt(context)
         messages = [
             {"role": "system", "content": system_prompt},
@@ -130,35 +130,35 @@ class RAGService:
             temperature=temperature
         )
 
-        logger.info(f"RAG query completed with {len(sources)} sources")
+        logger.info(f"RAG 查询完成，包含 {len(sources)} 个源")
         return response, sources
 
     def _build_context(self, sources: List[SourceDocument]) -> str:
-        """Build context string from source documents.
+        """从源文档建立上下文字符串。
 
         Args:
-            sources: List of source documents.
+            sources: 源文档列表。
 
         Returns:
-            Context string for the LLM.
+            LLM 的上下文字符串。
         """
         context_parts = []
         for i, source in enumerate(sources, 1):
             context_parts.append(
-                f"[Document {i}] {source.filename}\n"
+                f"[文档 {i}] {source.filename}\n"
                 f"{source.content}\n"
             )
 
         return "\n".join(context_parts)
 
     def _build_system_prompt(self, context: str) -> str:
-        """Build system prompt with context.
+        """使用上下文建立系统提示。
 
         Args:
-            context: Context string from retrieved documents.
+            context: 来检索文档的上下文字符串。
 
         Returns:
-            System prompt for the LLM.
+            LLM 的系统提示。
         """
         return (
             "You are a helpful AI assistant. Use the following context to "
@@ -177,21 +177,21 @@ class RAGService:
         rerank: bool = False,
         temperature: float = 0.7
     ) -> Tuple[str, Optional[List[SourceDocument]]]:
-        """Execute a RAG query with conversation history.
+        """执行带对话历史的 RAG 查询。
 
         Args:
-            query: The user's question.
-            collection_id: UUID of the knowledge collection.
-            user_id: UUID of the user.
-            conversation_history: List of previous messages.
-            top_k: Number of documents to retrieve.
-            rerank: Whether to rerank results.
-            temperature: LLM temperature.
+            query: 用户的问题。
+            collection_id: 知识库集合的 UUID。
+            user_id: 用户的 UUID。
+            conversation_history: 前一个消息的列表。
+            top_k: 要检索的文档数量。
+            rerank: 是否重排结果。
+            temperature: LLM 温度。
 
         Returns:
-            Tuple of (response text, list of source documents).
+            (回復文本, 源文档列表) 的元组。
         """
-        # Retrieve documents
+        # 检索文档
         knowledge_query = KnowledgeQuery(
             query=query,
             collection_id=collection_id,
@@ -204,18 +204,18 @@ class RAGService:
             user_id
         )
 
-        # Build context
+        # 建立上下文
         context = self._build_context(sources) if sources else ""
         system_prompt = self._build_system_prompt(context) if context else (
             "You are a helpful AI assistant."
         )
 
-        # Build messages with history
+        # 使用历史建立消息
         messages = [{"role": "system", "content": system_prompt}]
         messages.extend(conversation_history)
         messages.append({"role": "user", "content": query})
 
-        # Generate response
+        # 生成回復
         response = await self.llm_service.generate(
             messages=messages,
             temperature=temperature
@@ -232,20 +232,20 @@ class RAGService:
         rerank: bool = False,
         temperature: float = 0.7
     ):
-        """Execute a RAG query with streaming response.
+        """执行带流式回復的 RAG 查询。
 
         Args:
-            query: The user's question.
-            collection_id: UUID of the knowledge collection.
-            user_id: UUID of the user.
-            top_k: Number of documents to retrieve.
-            rerank: Whether to rerank results.
-            temperature: LLM temperature.
+            query: 用户的问题。
+            collection_id: 知识库集合的 UUID。
+            user_id: 用户的 UUID。
+            top_k: 要检索的文档数量。
+            rerank: 是否重排结果。
+            temperature: LLM 温度。
 
         Yields:
-            Text chunks from the response.
+            来自回復的文本块。
         """
-        # Retrieve documents
+        # 检索文档
         knowledge_query = KnowledgeQuery(
             query=query,
             collection_id=collection_id,
@@ -258,7 +258,7 @@ class RAGService:
             user_id
         )
 
-        # Build context and system prompt
+        # 建立上下文和系统提示
         context = self._build_context(sources) if sources else ""
         system_prompt = self._build_system_prompt(context) if context else (
             "You are a helpful AI assistant."
@@ -269,6 +269,6 @@ class RAGService:
             {"role": "user", "content": query}
         ]
 
-        # Stream response
+        # 流式回復
         async for chunk in self.llm_service.stream_generate(messages, temperature):
             yield chunk

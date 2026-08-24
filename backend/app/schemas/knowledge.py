@@ -1,4 +1,4 @@
-"""Pydantic schemas for knowledge collection and document management."""
+"""Pydantic 模式，用于知识库集合和文档管理。"""
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -7,22 +7,22 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 
-# Knowledge Collection schemas
+# 知识库集合模式
 class KnowledgeCollectionBase(BaseModel):
-    """Base knowledge collection schema with common fields."""
+    """带常用字段的知识库集合基础模式。"""
 
     name: str = Field(..., min_length=1, max_length=100)
     description: Optional[str] = None
 
 
 class KnowledgeCollectionCreate(KnowledgeCollectionBase):
-    """Schema for creating a knowledge collection."""
+    """创建知识库集合的模式。"""
 
     pass
 
 
 class KnowledgeCollectionResponse(KnowledgeCollectionBase):
-    """Schema for knowledge collection response data."""
+    """知识库集合响应数据的模式。"""
 
     id: UUID
     user_id: UUID
@@ -32,22 +32,22 @@ class KnowledgeCollectionResponse(KnowledgeCollectionBase):
 
 
 class KnowledgeCollectionList(BaseModel):
-    """Schema for list of knowledge collections."""
+    """知识库集合列表的模式。"""
 
     collections: List[KnowledgeCollectionResponse]
     total: int
 
 
-# Document schemas
+# 文档模式
 class DocumentBase(BaseModel):
-    """Base document schema with common fields."""
+    """带常用字段的文档基础模式。"""
 
     filename: str
     file_size: int
 
 
 class DocumentResponse(DocumentBase):
-    """Schema for document response data."""
+    """文档响应数据的模式。"""
 
     id: UUID
     collection_id: UUID
@@ -59,15 +59,15 @@ class DocumentResponse(DocumentBase):
 
 
 class DocumentList(BaseModel):
-    """Schema for list of documents."""
+    """文档列表的模式。"""
 
     documents: List[DocumentResponse]
     total: int
 
 
-# Knowledge Query schemas
+# 知识库查询模式
 class KnowledgeQuery(BaseModel):
-    """Schema for knowledge query request."""
+    """知识库查询请求的模式。"""
 
     query: str = Field(..., min_length=1)
     collection_id: UUID
@@ -76,7 +76,7 @@ class KnowledgeQuery(BaseModel):
 
 
 class SourceDocument(BaseModel):
-    """Schema for source document in query response."""
+    """查询响应中源文档的模式。"""
 
     document_id: UUID
     filename: str
@@ -86,7 +86,7 @@ class SourceDocument(BaseModel):
 
 
 class KnowledgeQueryResponse(BaseModel):
-    """Schema for knowledge query response."""
+    """知识库查询响应的模式。"""
 
     query: str
     sources: List[SourceDocument]
