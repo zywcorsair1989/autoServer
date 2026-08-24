@@ -15,17 +15,17 @@ api.interceptors.request.use(config => {
 
 export default {
   async getCollections() {
-    const response = await api.get('/knowledge-base/collections')
+    const response = await api.get('/knowledge/collections')
     return response.data
   },
 
   async createCollection(name, description) {
-    const response = await api.post('/knowledge-base/collections', { name, description })
+    const response = await api.post('/knowledge/collections', { name, description })
     return response.data
   },
 
   async deleteCollection(id) {
-    const response = await api.delete(`/knowledge-base/collections/${id}`)
+    const response = await api.delete(`/knowledge/collections/${id}`)
     return response.data
   },
 
@@ -58,7 +58,7 @@ export default {
   },
 
   async query(collectionId, query, topK = 5) {
-    const response = await api.post('/knowledge-base/query', {
+    const response = await api.post('/knowledge/query', {
       collection_id: collectionId,
       query,
       top_k: topK

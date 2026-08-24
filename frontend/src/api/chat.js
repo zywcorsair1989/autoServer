@@ -15,22 +15,22 @@ api.interceptors.request.use(config => {
 
 export default {
   async getConversations(skip = 0, limit = 20) {
-    const response = await api.get(`/conversations/?skip=${skip}&limit=${limit}`)
+    const response = await api.get('/chat/conversations', { params: { skip, limit } })
     return response.data
   },
 
   async createConversation(title) {
-    const response = await api.post('/conversations/', { title })
+    const response = await api.post('/chat/conversations', { title })
     return response.data
   },
 
   async getConversation(id) {
-    const response = await api.get(`/conversations/${id}`)
+    const response = await api.get(`/chat/conversations/${id}`)
     return response.data
   },
 
   async deleteConversation(id) {
-    const response = await api.delete(`/conversations/${id}`)
+    const response = await api.delete(`/chat/conversations/${id}`)
     return response.data
   },
 
