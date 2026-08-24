@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg15
+    environment:
+      POSTGRES_DB: rag_system
+      POSTGRES_USER: rag_user
+      POSTGRES_PASSWORD: rag_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://rag_user:rag_password@postgres:5432/rag_system
+      BAILIAN_API_KEY: ${BAILIAN_API_KEY}
+      SECRET_KEY: ${SECRET_KEY}
+    depends_on:
+      - postgres
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/uploads:/app/uploads
+    networks:
+      - app-network
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge
