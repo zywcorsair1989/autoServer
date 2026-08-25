@@ -13,6 +13,7 @@ class MessageBase(BaseModel):
 
     role: str = Field(..., min_length=1, max_length=20)
     content: str = Field(..., min_length=1)
+    sources: Optional[List["SourceDocument"]] = None
 
 
 class MessageCreate(MessageBase):
@@ -89,4 +90,6 @@ class ChatResponse(BaseModel):
 from app.schemas.knowledge import SourceDocument
 
 # 更新前向引用
+MessageBase.model_rebuild()
+MessageResponse.model_rebuild()
 ChatResponse.model_rebuild()

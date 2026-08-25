@@ -4,7 +4,7 @@ from datetime import datetime
 from uuid import uuid4
 
 from sqlalchemy import String, Text, DateTime, ForeignKey, Index
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -91,6 +91,11 @@ class Message(Base):
     content: Mapped[str] = mapped_column(
         Text,
         nullable=False
+    )
+    sources: Mapped[dict | None] = mapped_column(
+        JSONB,
+        nullable=True,
+        default=None
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime,

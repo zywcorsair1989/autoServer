@@ -94,7 +94,7 @@ class RAGService:
             logger.warning(f"在集合 {collection_id} 中未找到查询的文档")
             response = await self.llm_service.generate(
                 messages=[
-                    {"role": "system", "content": "You are a helpful AI assistant."},
+                    {"role": "system", "content": "你是一个专业的AI助手。"},
                     {"role": "user", "content": query}
                 ],
                 temperature=temperature
@@ -145,8 +145,7 @@ class RAGService:
         context_parts = []
         for i, source in enumerate(sources, 1):
             context_parts.append(
-                f"[文档 {i}] {source.filename}\n"
-                f"{source.content}\n"
+                f"[文档 {i}] {source.filename}\n{source.content}\n"
             )
 
         return "\n".join(context_parts)
@@ -161,10 +160,13 @@ class RAGService:
             LLM 的系统提示。
         """
         return (
-            "You are a helpful AI assistant. Use the following context to "
-            "answer the user's question. If the answer is not in the context, "
-            "say so honestly. Always cite which document(s) you used.\n\n"
-            f"Context:\n{context}"
+            "你是一个专业的AI助手。请根据提供的上下文文档回答用户问题。\n\n"
+            "要求：\n"
+            "1. 必须基于上下文文档中的事实回答，不要编造信息\n"
+            "2. 如果上下文中没有答案，请明确告知用户\n"
+            "3. 引用时使用 [文档名] 格式标注来源\n"
+            "4. 保持专业严谨的回答风格\n\n"
+            f"上下文：\n{context}"
         )
 
     async def query_with_history(
@@ -207,7 +209,7 @@ class RAGService:
         # 建立上下文
         context = self._build_context(sources) if sources else ""
         system_prompt = self._build_system_prompt(context) if context else (
-            "You are a helpful AI assistant."
+            "你是一个专业的AI助手。"
         )
 
         # 使用历史建立消息
@@ -261,7 +263,7 @@ class RAGService:
         # 建立上下文和系统提示
         context = self._build_context(sources) if sources else ""
         system_prompt = self._build_system_prompt(context) if context else (
-            "You are a helpful AI assistant."
+            "你是一个专业的AI助手。"
         )
 
         messages = [
