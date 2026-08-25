@@ -34,6 +34,16 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 
+def _make_title(message: str, max_len: int = 50) -> str:
+    """从用户消息生成对话标题（压缩空白，超长截断）。"""
+    text = " ".join(message.split())
+    if not text:
+        return "新对话"
+    if len(text) > max_len:
+        return text[:max_len] + "..."
+    return text
+
+
 @router.post(
     "/conversations",
     response_model=ConversationResponse,
@@ -199,7 +209,7 @@ async def chat(
         from app.schemas.chat import ConversationCreate
         conversation = await chat_service.create_conversation(
             current_user.id,
-            ConversationCreate(title=request.message[:50] + "...")
+            ConversationCreate(title=_make_title(request.message))
         )
         conversation_id = conversation.id
     else:
@@ -212,6 +222,14 @@ async def chat(
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"对话 {conversation_id} 未找到"
+            )
+
+        # 标题仍为默认值时，用首条消息生成话题标题
+        if conversation.title == "新对话":
+            await chat_service.update_conversation_title(
+                conversation_id,
+                current_user.id,
+                _make_title(request.message)
             )
 
     # 保存用户消息
@@ -256,7 +274,7 @@ async def chat(
             if not any(msg["role"] == "system" for msg in messages):
                 messages.insert(0, {
                     "role": "system",
-                    "content": "You are a helpful AI assistant."
+                    "content": "你是一个专业的AI助手。"
                 })
 
             response_text = await llm_service.generate(messages)
@@ -270,7 +288,7 @@ async def chat(
     # 保存助手消息
     assistant_message = await chat_service.add_message(
         conversation_id,
-        MessageCreate(role="assistant", content=response_text)
+        MessageCreate(role="assistant", content=response_text, sources=sources)
     )
 
     return ChatResponse(
@@ -313,7 +331,7 @@ async def stream_chat(
         from app.schemas.chat import ConversationCreate
         conversation = await chat_service.create_conversation(
             current_user.id,
-            ConversationCreate(title=request.message[:50] + "...")
+            ConversationCreate(title=_make_title(request.message))
         )
         conversation_id = conversation.id
     else:
@@ -325,6 +343,14 @@ async def stream_chat(
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"对话 {conversation_id} 未找到"
+            )
+
+        # 标题仍为默认值时，用首条消息生成话题标题
+        if conversation.title == "新对话":
+            await chat_service.update_conversation_title(
+                conversation_id,
+                current_user.id,
+                _make_title(request.message)
             )
 
     # 保存用户消息
@@ -344,7 +370,7 @@ async def stream_chat(
             if not any(msg["role"] == "system" for msg in messages):
                 messages.insert(0, {
                     "role": "system",
-                    "content": "You are a helpful AI assistant."
+                    "content": "你是一个专业的AI助手。"
                 })
 
             full_response = ""
