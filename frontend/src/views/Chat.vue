@@ -49,38 +49,104 @@ export default {
     const messages = ref([])
 
     const loadConversations = async () => {
-      const response = await chatApi.getConversations()
-      conversations.value = response.items
+      try {
+        const response = await chatApi.getConversations()
+        // 后端返回 {conversations: [...], total: N} 格式
+        conversations.value = response?.conversations || []
+        console.log('已加载对话列表:', conversations.value)
+      } catch (error) {
+        console.error('加载对话列表失败:', error)
+        conversations.value = []
+      }
     }
 
     const createNewConversation = async () => {
-      const conv = await chatApi.createConversation('新对话')
-      conversations.value.unshift(conv)
-      selectConversation(conv)
+      try {
+        console.log('正在创建新对话...')
+        const conv = await chatApi.createConversation('新对话')
+        console.log('已创建对话:', conv)
+        // Check if conv has an id property
+        if (!conv || !conv.id) {
+          console.error('收到的对话数据无效:', conv)
+          return
+        }
+        // Add the new conversation to the beginning of the list
+        if (Array.isArray(conversations.value)) {
+          // If conversations is an array, use unshift
+          conversations.value.unshift(conv)
+        } else {
+          // If conversations is not an array, initialize it as an array with the new conversation
+          conversations.value = [conv]
+        }
+        // Select the newly created conversation
+        selectConversation(conv)
+      } catch (error) {
+        console.error('创建对话失败:', error)
+      }
     }
 
     const selectConversation = async (conv) => {
-      currentConversation.value = conv
-      const response = await chatApi.getConversation(conv.id)
-      messages.value = response.messages
-    }
-
-    const deleteConversation = async (id) => {
-      await chatApi.deleteConversation(id)
-      conversations.value = conversations.value.filter(c => c.id !== id)
-      if (currentConversation.value?.id === id) {
-        currentConversation.value = null
+      try {
+        console.log('正在选择对话:', conv)
+        if (!conv || !conv.id) {
+          console.error('对话数据无效:', conv)
+          return
+        }
+        currentConversation.value = conv
+        const response = await chatApi.getConversation(conv.id)
+        // Ensure messages are properly formatted
+        if (response && response.messages) {
+          messages.value = response.messages
+        } else {
+          messages.value = response || []
+        }
+        console.log('已加载对话消息:', messages.value)
+      } catch (error) {
+        console.error('加载对话失败:', error)
         messages.value = []
       }
     }
 
+    const deleteConversation = async (id) => {
+      try {
+        console.log('尝试删除对话，ID:', id)
+        if (!id) {
+          console.error('无法删除对话：ID 未定义或为空')
+          return
+        }
+        await chatApi.deleteConversation(id)
+        // Remove from the conversations list
+        conversations.value = conversations.value.filter(c => c.id !== id)
+        // If current conversation is deleted, clear it
+        if (currentConversation.value?.id === id) {
+          currentConversation.value = null
+          messages.value = []
+        }
+        console.log('成功删除对话')
+      } catch (error) {
+        console.error('删除对话失败:', error)
+      }
+    }
+
     const handleSendMessage = async (message) => {
-      const response = await chatApi.sendMessage(currentConversation.value.id, message)
-      messages.value.push({
-        role: 'user',
-        content: message
-      })
-      messages.value.push(response)
+      try {
+        if (!currentConversation.value?.id) {
+          console.error('无法发送消息：未选择对话')
+          return
+        }
+        console.log('正在发送消息，对话:', currentConversation.value?.id)
+        const response = await chatApi.sendMessage(currentConversation.value.id, message)
+        messages.value.push({
+          role: 'user',
+          content: message
+        })
+        // 后端返回 {message: {...}, sources: [...]} 格式
+        if (response?.message) {
+          messages.value.push(response.message)
+        }
+      } catch (error) {
+        console.error('发送消息失败:', error)
+      }
     }
 
     onMounted(loadConversations)

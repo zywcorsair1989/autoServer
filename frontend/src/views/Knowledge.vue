@@ -102,7 +102,7 @@ export default {
           // 后端返回 {documents: [...], total} 格式
           documents[collection.id] = docs?.documents || []
         } catch (error) {
-          console.error(`Error loading documents for collection ${collection.id}:`, error)
+          console.error(`加载集合 ${collection.id} 的文档失败:`, error)
           documents[collection.id] = []
         }
       }
