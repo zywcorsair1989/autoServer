@@ -1,8 +1,15 @@
 """
 食尚订智能问答系统 - FastAPI 应用程序
 """
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+# 配置日志
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 
 # 导入模型以确保它们被注册到 Base 中
 from app.models import user, conversation, knowledge, document  # noqa: F401
