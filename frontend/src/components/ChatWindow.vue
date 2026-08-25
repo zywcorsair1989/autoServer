@@ -6,7 +6,19 @@
         :key="index"
         :class="['message', msg.role]"
       >
-        <div class="message-content">{{ msg.content }}</div>
+        <div class="message-content">
+          <div class="message-text" v-html="renderMarkdown(msg.content)"></div>
+          <div v-if="msg.sources && msg.sources.length > 0" class="sources-section">
+            <h4>来源文档：</h4>
+            <div v-for="(source, idx) in msg.sources" :key="idx" class="source-item">
+              <p class="source-header">
+                <strong>{{ source.filename }}</strong>
+                <span class="source-score">(得分: {{ source.score.toFixed(2) }})</span>
+              </p>
+              <p class="source-content">{{ source.content }}</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -24,6 +36,11 @@
 
 <script>
 import { ref, watch } from 'vue'
+import { marked } from 'marked'
+import DOMPurify from 'dompurify'
+
+// 单个换行符也转换为 <br>，匹配 LLM 输出习惯
+marked.setOptions({ breaks: true, gfm: true })
 
 export default {
   name: 'ChatWindow',
@@ -35,6 +52,13 @@ export default {
   setup(props, { emit }) {
     const inputMessage = ref('')
     const messagesContainer = ref(null)
+
+    // 将 Markdown 文本渲染为安全 HTML（换行/加粗/列表/代码块）
+    const renderMarkdown = (content) => {
+      if (!content) return ''
+      const html = marked.parse(String(content))
+      return DOMPurify.sanitize(html)
+    }
 
     const scrollToBottom = () => {
       if (messagesContainer.value) {
@@ -56,7 +80,8 @@ export default {
     return {
       inputMessage,
       messagesContainer,
-      sendMessage
+      sendMessage,
+      renderMarkdown
     }
   }
 }
@@ -106,6 +131,118 @@ export default {
 .message.assistant .message-content {
   background: white;
   color: #333;
+}
+
+/* Markdown 渲染样式 */
+.message-text :deep(p) {
+  margin: 0 0 0.5rem 0;
+  white-space: pre-wrap;
+}
+
+.message-text :deep(p:last-child) {
+  margin-bottom: 0;
+}
+
+.message-text :deep(ul),
+.message-text :deep(ol) {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.message-text :deep(li) {
+  margin: 0.25rem 0;
+}
+
+.message-text :deep(h1),
+.message-text :deep(h2),
+.message-text :deep(h3),
+.message-text :deep(h4) {
+  margin: 0.75rem 0 0.5rem 0;
+  font-size: 1.05rem;
+}
+
+.message-text :deep(h1:first-child),
+.message-text :deep(h2:first-child),
+.message-text :deep(h3:first-child) {
+  margin-top: 0;
+}
+
+.message-text :deep(pre) {
+  background: #f0f0f0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 5px;
+  overflow-x: auto;
+  margin: 0.5rem 0;
+}
+
+.message-text :deep(code) {
+  background: #f0f0f0;
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+.message-text :deep(pre code) {
+  background: none;
+  padding: 0;
+}
+
+.message-text :deep(blockquote) {
+  margin: 0.5rem 0;
+  padding: 0.25rem 0.75rem;
+  border-left: 3px solid #ccc;
+  color: #666;
+}
+
+/* 用户气泡内代码块背景适配蓝底白字 */
+.message.user .message-text :deep(pre),
+.message.user .message-text :deep(code) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.message.user .message-text :deep(blockquote) {
+  border-left-color: rgba(255, 255, 255, 0.5);
+  color: #eee;
+}
+
+.sources-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.sources-section h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.source-item {
+  margin-bottom: 0.75rem;
+  padding: 0.5rem;
+  background: #f9f9f9;
+  border-radius: 5px;
+  border-left: 3px solid #667eea;
+}
+
+.source-header {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.85rem;
+}
+
+.source-score {
+  color: #999;
+  font-size: 0.8rem;
+  margin-left: 0.5rem;
+}
+
+.source-content {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .input-area {
