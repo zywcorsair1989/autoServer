@@ -144,6 +144,14 @@ export default {
         if (response?.message) {
           messages.value.push(response.message)
         }
+        // 标题仍为默认值时，将侧边栏标题更新为首条消息话题（与后端逻辑一致）
+        if (currentConversation.value.title === '新对话') {
+          const text = String(message).split(/\s+/).filter(Boolean).join(' ')
+          const newTitle = text.length > 50 ? text.slice(0, 50) + '...' : text
+          currentConversation.value.title = newTitle
+          const conv = conversations.value.find(c => c.id === currentConversation.value.id)
+          if (conv) conv.title = newTitle
+        }
       } catch (error) {
         console.error('发送消息失败:', error)
       }
