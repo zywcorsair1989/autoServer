@@ -92,12 +92,19 @@ export default {
 
     const loadCollections = async () => {
       const response = await knowledgeApi.getCollections()
-      collections.value = response.items
+      // 后端返回 {collections: [...], total} 格式
+      collections.value = response?.collections || []
 
-      // 为每个集合加载文档
+      // 为每个集合加载文档（单个集合加载失败不影响列表展示）
       for (const collection of collections.value) {
-        const docs = await knowledgeApi.getDocuments(collection.id)
-        documents[collection.id] = docs.items
+        try {
+          const docs = await knowledgeApi.getDocuments(collection.id)
+          // 后端返回 {documents: [...], total} 格式
+          documents[collection.id] = docs?.documents || []
+        } catch (error) {
+          console.error(`Error loading documents for collection ${collection.id}:`, error)
+          documents[collection.id] = []
+        }
       }
     }
 

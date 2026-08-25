@@ -13,9 +13,22 @@ api.interceptors.request.use(config => {
   return config
 })
 
+// 响应拦截器处理认证失效
+api.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token')
+      window.location.href = '/login'
+    }
+    return Promise.reject(error)
+  }
+)
+
 export default {
   async getCollections() {
-    const response = await api.get('/knowledge/collections')
+    // 后端路由是 GET /knowledge（返回 {collections: [...], total}）
+    const response = await api.get('/knowledge')
     return response.data
   },
 
