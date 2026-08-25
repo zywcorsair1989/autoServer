@@ -1,7 +1,6 @@
-"""Text splitting utilities for document chunking.
+"""文档分块的文本分割工具。
 
-This module provides text splitting functionality for breaking
-documents into smaller chunks for embedding and retrieval.
+此模块提供文本分割功能，用于将文档分割成较小的块以便进行嵌入和检索。
 """
 
 import re
@@ -14,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class TextChunk:
-    """Represents a chunk of text with metadata."""
+    """表示带有元数据的文本块。"""
 
     content: str
     index: int

@@ -1,4 +1,4 @@
-"""Document and DocumentChunk models for the RAG system."""
+"""RAG 系统的文档和文档块模型。"""
 
 from datetime import datetime
 from uuid import uuid4
@@ -11,7 +11,7 @@ from app.core.database import Base
 
 
 class Document(Base):
-    """Document model for uploaded files."""
+    """上传文件的文档模型。"""
 
     __tablename__ = "documents"
 
@@ -50,7 +50,7 @@ class Document(Base):
         default=datetime.utcnow
     )
 
-    # Relationships - use lazy="selectin" for async compatibility
+    # 关系 - 使用 lazy="selectin" 以兼容异步
     collection = relationship(
         "KnowledgeCollection",
         back_populates="documents",
@@ -74,7 +74,7 @@ class Document(Base):
 
 
 class DocumentChunk(Base):
-    """Document chunk model for storing text chunks with embeddings."""
+    """存储带有嵌入向量的文本块的文档块模型。"""
 
     __tablename__ = "document_chunks"
 
@@ -98,7 +98,9 @@ class DocumentChunk(Base):
         String,
         nullable=True
     )
+    # 修正：数据库中的字段是 metadata，但在 Python 中应使用 chunk_metadata
     chunk_metadata: Mapped[dict] = mapped_column(
+        "metadata",  # 修正：映射到数据库中的 metadata 字段
         JSONB,
         nullable=True,
         default=dict
@@ -109,7 +111,7 @@ class DocumentChunk(Base):
         default=datetime.utcnow
     )
 
-    # Relationships - use lazy="selectin" for async compatibility
+    # 关系 - 使用 lazy="selectin" 以兼容异步
     document = relationship(
         "Document",
         back_populates="chunks",

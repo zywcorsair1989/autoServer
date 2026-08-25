@@ -1,4 +1,4 @@
-"""Knowledge collection model for the RAG system."""
+"""RAG 系统的知识库集合模型。"""
 
 from datetime import datetime
 from uuid import uuid4
@@ -11,7 +11,7 @@ from app.core.database import Base
 
 
 class KnowledgeCollection(Base):
-    """Knowledge collection model for organizing documents."""
+    """知识库集合模型，用于组织文档。"""
 
     __tablename__ = "knowledge_collections"
 
@@ -41,7 +41,7 @@ class KnowledgeCollection(Base):
         default=datetime.utcnow
     )
 
-    # Relationships - use lazy="selectin" for async compatibility
+    # 关系 - 使用 lazy="selectin" 以兼容异步
     user = relationship(
         "User",
         back_populates="knowledge_collections",
