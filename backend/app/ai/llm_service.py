@@ -50,6 +50,9 @@ class LLMService:
                     model=self.model,
                     messages=formatted_messages,
                     temperature=temperature,
+                    # 显式关闭百炼联网搜索：知识库问答场景答案必须来自文档，
+                    # 且联网搜索会显著拉长响应时间
+                    extra_body={"enable_search": False},
                 )
                 content = response.choices[0].message.content
                 if content is None:
@@ -80,6 +83,7 @@ class LLMService:
                 messages=messages,
                 temperature=temperature,
                 stream=True,
+                extra_body={"enable_search": False},
             )
 
             async for chunk in stream:

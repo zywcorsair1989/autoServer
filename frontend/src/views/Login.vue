@@ -58,12 +58,14 @@ export default {
 
         if (isLogin.value) {
           const response = await authApi.login(username.value, password.value)
+          userStore.setActiveUser(username.value)
           userStore.setToken(response.access_token)
           userStore.setUser(response.user)
           router.push('/home')
         } else {
           await authApi.register(username.value, email.value, password.value)
           const response = await authApi.login(username.value, password.value)
+          userStore.setActiveUser(username.value)
           userStore.setToken(response.access_token)
           userStore.setUser(response.user)
           router.push('/home')

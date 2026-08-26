@@ -25,12 +25,6 @@
           <p>上传和管理文档以构建您的知识库</p>
           <router-link to="/knowledge" class="card-link">管理知识库</router-link>
         </div>
-
-        <div class="card">
-          <h3>RAG技术</h3>
-          <p>先进的检索增强生成技术，提供准确的答案</p>
-          <router-link to="/chat" class="card-link">立即体验</router-link>
-        </div>
       </div>
     </div>
   </div>

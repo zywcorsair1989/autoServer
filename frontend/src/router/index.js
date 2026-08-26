@@ -40,8 +40,13 @@ const router = createRouter({
 })
 
 // Navigation guard for authentication
+function currentToken() {
+  const name = localStorage.getItem('current_user')
+  return name ? localStorage.getItem(`token_${name}`) : null
+}
+
 router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem('token')
+  const token = currentToken()
 
   if (to.meta.requiresAuth && !token) {
     next('/login')

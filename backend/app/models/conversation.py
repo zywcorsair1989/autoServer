@@ -92,7 +92,7 @@ class Message(Base):
         Text,
         nullable=False
     )
-    sources: Mapped[dict | None] = mapped_column(
+    sources: Mapped[list | None] = mapped_column(
         JSONB,
         nullable=True,
         default=None
