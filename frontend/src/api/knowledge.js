@@ -5,8 +5,14 @@ const api = axios.create({
   timeout: 30000
 })
 
+// 读取当前账号的专属 token 键
+function currentToken() {
+  const name = localStorage.getItem('current_user')
+  return name ? localStorage.getItem(`token_${name}`) : null
+}
+
 api.interceptors.request.use(config => {
-  const token = localStorage.getItem('token')
+  const token = currentToken()
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
@@ -18,7 +24,9 @@ api.interceptors.response.use(
   response => response,
   error => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token')
+      const name = localStorage.getItem('current_user')
+      if (name) localStorage.removeItem(`token_${name}`)
+      localStorage.removeItem('current_user')
       window.location.href = '/login'
     }
     return Promise.reject(error)
@@ -47,7 +55,7 @@ export default {
     formData.append('file', file)
     formData.append('collection_id', collectionId)
 
-    const token = localStorage.getItem('token')
+    const token = currentToken()
     const response = await axios.post('/api/v1/documents/upload', formData, {
       headers: {
         'Authorization': `Bearer ${token}`,

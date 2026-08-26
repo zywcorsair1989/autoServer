@@ -81,23 +81,30 @@ class KnowledgeService:
     async def get_collection(
         self,
         collection_id: UUID,
-        user_id: UUID
+        user_id: UUID,
+        include_public: bool = False
     ) -> Optional[KnowledgeCollection]:
         """Get a knowledge collection by ID.
 
         Args:
             collection_id: UUID of the collection.
             user_id: UUID of the user.
+            include_public: 是否允许访问公共知识库（检索场景为 True，
+                管理操作保持 False 以防他人修改公共库）。
 
         Returns:
             KnowledgeCollection if found and owned by user, None otherwise.
         """
+        ownership = KnowledgeCollection.user_id == user_id
+        if include_public:
+            ownership = ownership | KnowledgeCollection.is_public.is_(True)
+
         result = await self.db.execute(
             select(KnowledgeCollection)
             .options(selectinload(KnowledgeCollection.documents))
             .where(
                 KnowledgeCollection.id == collection_id,
-                KnowledgeCollection.user_id == user_id
+                ownership
             )
         )
         return result.scalar_one_or_none()
@@ -118,17 +125,22 @@ class KnowledgeService:
         Returns:
             Tuple of (list of collections, total count).
         """
+        # 包含用户自己的库 + 公共库（如"食尚订产品文档"），新账号零配置即可使用
+        visibility = (
+            KnowledgeCollection.user_id == user_id
+        ) | KnowledgeCollection.is_public.is_(True)
+
         # Get total count
         count_result = await self.db.execute(
             select(func.count(KnowledgeCollection.id))
-            .where(KnowledgeCollection.user_id == user_id)
+            .where(visibility)
         )
         total = count_result.scalar() or 0
 
         # Get collections
         result = await self.db.execute(
             select(KnowledgeCollection)
-            .where(KnowledgeCollection.user_id == user_id)
+            .where(visibility)
             .order_by(KnowledgeCollection.created_at.desc())
             .offset(skip)
             .limit(limit)
@@ -401,8 +413,10 @@ class KnowledgeService:
         if self.embedding_service is None:
             raise ValueError("Embedding service not configured")
 
-        # Verify collection ownership
-        collection = await self.get_collection(query.collection_id, user_id)
+        # Verify collection ownership（公共知识库对所有用户开放检索）
+        collection = await self.get_collection(
+            query.collection_id, user_id, include_public=True
+        )
         if collection is None:
             raise ValueError(f"Collection {query.collection_id} not found")
 

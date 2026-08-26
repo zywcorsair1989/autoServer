@@ -3,7 +3,7 @@
 from datetime import datetime
 from uuid import uuid4
 
-from sqlalchemy import String, Text, DateTime, ForeignKey, Index
+from sqlalchemy import String, Text, DateTime, ForeignKey, Index, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -34,6 +34,12 @@ class KnowledgeCollection(Base):
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True
+    )
+    # 公共知识库：所有用户可检索（如"食尚订产品文档"），仅所有者可管理
+    is_public: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime,

@@ -26,6 +26,7 @@ class KnowledgeCollectionResponse(KnowledgeCollectionBase):
 
     id: UUID
     user_id: UUID
+    is_public: bool = False
     created_at: datetime
 
     model_config = {"from_attributes": True}

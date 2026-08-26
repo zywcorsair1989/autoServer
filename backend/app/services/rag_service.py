@@ -90,14 +90,23 @@ class RAGService:
         )
 
         if not sources:
-            # 未找到相关文档
-            logger.warning(f"在集合 {collection_id} 中未找到查询的文档")
+            # 检索无结果：兜底让 LLM 基于通用知识回答（联网搜索已关闭，不会去网上查）
+            # 系统提示词强调"不要编造"，避免模型编造不存在的功能/操作
+            logger.warning(f"在集合 {collection_id} 中未找到查询的文档，启用兜底")
             response = await self.llm_service.generate(
                 messages=[
-                    {"role": "system", "content": "你是一个专业的AI助手。"},
-                    {"role": "user", "content": query}
+                    {
+                        "role": "system",
+                        "content": (
+                            "你是一个专业的AI助手。请基于通用知识回答用户问题。"
+                            "如果问题涉及具体系统的功能或操作步骤而你不确定，"
+                            "请明确告知用户'该问题需要查阅产品文档确认'，"
+                            "不要编造操作步骤或文档中可能不存在的功能。"
+                        ),
+                    },
+                    {"role": "user", "content": query},
                 ],
-                temperature=temperature
+                temperature=temperature,
             )
             return response, None
 
