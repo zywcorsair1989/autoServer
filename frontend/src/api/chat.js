@@ -2,11 +2,17 @@ import axios from 'axios'
 
 const api = axios.create({
   baseURL: '/api/v1',
-  timeout: 30000
+  timeout: 120000  // 聊天接口含 RAG 检索与 LLM 生成，耗时较长，不能设 30s
 })
 
+// 读取当前账号的专属 token 键
+function currentToken() {
+  const name = localStorage.getItem('current_user')
+  return name ? localStorage.getItem(`token_${name}`) : null
+}
+
 api.interceptors.request.use(config => {
-  const token = localStorage.getItem('token')
+  const token = currentToken()
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
@@ -18,7 +24,9 @@ api.interceptors.response.use(
   response => response,
   error => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token')
+      const name = localStorage.getItem('current_user')
+      if (name) localStorage.removeItem(`token_${name}`)
+      localStorage.removeItem('current_user')
       window.location.href = '/login'
     }
     return Promise.reject(error)
@@ -70,7 +78,7 @@ export default {
 
   async streamMessage(conversationId, message, onChunk) {
     // 首先获取用户的知识库集
-    const token = localStorage.getItem('token')
+    const token = currentToken()
     const collectionsResponse = await fetch('/api/v1/knowledge', {
       method: 'GET',
       headers: {

@@ -167,10 +167,20 @@ class ChatService:
         if conversation is None:
             raise ValueError(f"对话 {conversation_id} 未找到")
 
+        # 将 Pydantic SourceDocument 序列化为可存入 JSONB 的字典列表
+        # mode="json" 将 UUID 等类型转为字符串，否则 json.dumps 报
+        # "Object of type UUID is not JSON serializable"
+        sources = (
+            [s.model_dump(mode="json") for s in message_data.sources]
+            if message_data.sources
+            else None
+        )
+
         message = Message(
             conversation_id=conversation_id,
             role=message_data.role,
-            content=message_data.content
+            content=message_data.content,
+            sources=sources
         )
 
         self.db.add(message)
