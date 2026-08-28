@@ -24,6 +24,7 @@ from app.schemas.knowledge import (
     SourceDocument,
 )
 from app.services.knowledge_service import KnowledgeService
+from app.services.rag_service import RAGService
 from app.ai.embedding_service import EmbeddingService
 
 logger = logging.getLogger(__name__)
@@ -191,31 +192,3 @@ async def query_knowledge(
         current_user.id
     )
     return result
-
-
-@router.post(
-    "/collections",
-    summary="创建知识库集合",
-    description="创建知识库集合。"
-)
-async def create_collection(
-    collection_data: KnowledgeCollectionCreate,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db)
-) -> KnowledgeCollectionResponse:
-    """创建知识库集合。
-
-    Args:
-        collection_data: 知识库集合创建数据。
-        current_user: 当前认证用户。
-        db: 数据库会话。
-
-    Returns:
-        创建的知识库集合。
-    """
-    service = KnowledgeService(db)
-    collection = await service.create_collection(
-        current_user.id,
-        collection_data
-    )
-    return collection
