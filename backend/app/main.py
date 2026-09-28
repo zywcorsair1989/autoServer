@@ -15,6 +15,14 @@ logging.basicConfig(
 from app.models import user, conversation, knowledge, document  # noqa: F401
 
 from app.api.v1.api import api_router
+from app.core.config import settings
+
+# 安全检查：生产环境必须设置 SECRET_KEY
+DEFAULT_SECRET_KEY = "your-secret-key-change-in-production-min-32-characters"
+if settings.SECRET_KEY == DEFAULT_SECRET_KEY:
+    import sys
+    print("错误：SECRET_KEY 使用默认值，请设置环境变量 SECRET_KEY")
+    sys.exit(1)
 
 app = FastAPI(
     title="食尚订智能问答系统",
@@ -23,10 +31,14 @@ app = FastAPI(
 )
 
 # 配置 CORS
+cors_origins = settings.CORS_ORIGINS.split(",") if settings.CORS_ORIGINS != "*" else ["*"]
+# 当 allow_credentials=True 时，不能使用通配符 "*"
+allow_credentials = settings.CORS_ORIGINS != "*"
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 在生产环境中适当配置
-    allow_credentials=True,
+    allow_origins=cors_origins,
+    allow_credentials=allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )

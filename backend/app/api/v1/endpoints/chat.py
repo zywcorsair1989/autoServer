@@ -48,7 +48,7 @@ def _make_title(message: str, max_len: int = 50) -> str:
     "/conversations",
     response_model=ConversationResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="创建新对话",
+       summary="创建新对话",
     description="为当前用户创建新对话。"
 )
 async def create_conversation(

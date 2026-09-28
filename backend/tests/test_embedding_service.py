@@ -3,6 +3,7 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from app.ai.embedding_service import EmbeddingService
+from app.core.config import settings
 
 
 @pytest.fixture
@@ -27,8 +28,9 @@ class TestEmbeddingService:
         """Test Embedding Service initializes correctly"""
         service = EmbeddingService()
 
-        assert service.model == "text-embedding-v2"
-        assert service.dimension == 1536
+        # 模型名与维度均取决于 .env / config，不写死具体值
+        assert service.model == settings.BAILIAN_EMBEDDING_MODEL
+        assert service.dimension == settings.EMBEDDING_DIMENSION
         assert service.client is not None
 
     @pytest.mark.asyncio

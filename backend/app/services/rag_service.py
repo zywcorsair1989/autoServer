@@ -77,10 +77,12 @@ class RAGService:
         logger.info(f"来自用户 {user_id} 的 RAG 查询: {query[:50]}...")
 
         # 步骤 1: 检索相关文档
+        # 当启用 rerank 时，检索更多候选以避免遗漏相关内容
+        retrieval_k = top_k * 3 if rerank else top_k
         knowledge_query = KnowledgeQuery(
             query=query,
             collection_id=collection_id,
-            top_k=top_k,
+            top_k=retrieval_k,
             rerank=rerank
         )
 
@@ -202,11 +204,12 @@ class RAGService:
         Returns:
             (回復文本, 源文档列表) 的元组。
         """
-        # 检索文档
+        # 检索文档 - 启用 rerank 时检索更多候选
+        retrieval_k = top_k * 3 if rerank else top_k
         knowledge_query = KnowledgeQuery(
             query=query,
             collection_id=collection_id,
-            top_k=top_k,
+            top_k=retrieval_k,
             rerank=rerank
         )
 
@@ -256,11 +259,12 @@ class RAGService:
         Yields:
             来自回復的文本块。
         """
-        # 检索文档
+        # 检索文档 - 启用 rerank 时检索更多候选
+        retrieval_k = top_k * 3 if rerank else top_k
         knowledge_query = KnowledgeQuery(
             query=query,
             collection_id=collection_id,
-            top_k=top_k,
+            top_k=retrieval_k,
             rerank=rerank
         )
 

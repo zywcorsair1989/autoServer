@@ -83,9 +83,9 @@ autoServer/
 │   │   ├── api/           # API 服务
 │   │   ├── router/        # 路由配置
 │   │   └── store/         # 状态管理
+│   ├── nginx.conf         # Nginx 配置（前端镜像构建时使用）
 │   └── package.json       # 前端依赖
 ├── docker-compose.yml      # Docker 编排
-├── nginx.conf             # Nginx 配置
 └── README.md              # 项目文档
 ```
 
@@ -140,9 +140,11 @@ docker-compose up -d
 - `POST /api/v1/chat/stream` - 流式发送消息
 
 #### 知识库管理
-- `POST /api/v1/knowledge-base/collections` - 创建知识库
-- `POST /api/v1/documents/upload` - 上传文档
-- `POST /api/v1/knowledge-base/query` - 知识库问答
+- `POST /api/v1/knowledge` - 创建知识库
+- `POST /api/v1/knowledge/query` - 知识库问答
+- `GET /api/v1/knowledge` - 获取知识库列表
+- `GET /api/v1/knowledge/{id}` - 获取知识库详情
+- `DELETE /api/v1/knowledge/{id}` - 删除知识库
 
 ## 测试
 
@@ -162,11 +164,10 @@ pytest
 ### 后端开发
 
 ```bash
-cd backend
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python main.py
+# 虚拟环境统一使用项目根目录的 .venv（不要另建 venv）
+source .venv/bin/activate          # 首次: python3.11 -m venv .venv
+pip install -r backend/requirements.txt
+cd backend && python main.py
 ```
 
 ### 前端开发

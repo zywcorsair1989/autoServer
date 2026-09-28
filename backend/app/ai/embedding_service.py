@@ -21,6 +21,21 @@ class EmbeddingService:
         self.dimension = settings.EMBEDDING_DIMENSION
         logger.info(f"嵌入服务使用模型 {self.model} 初始化")
 
+    def _warn_if_dimension_mismatch(self, embedding: List[float]) -> None:
+        """向量维度与 EMBEDDING_DIMENSION 不符时给出明确提示。
+
+        不符时 pgvector 只会在很深的调用栈里报 "expected N dimensions"，
+        这里先把可操作的线索打到日志里。
+        """
+        actual = len(embedding)
+        if actual != self.dimension:
+            logger.warning(
+                f"嵌入维度不匹配：模型 {self.model} 返回 {actual} 维，"
+                f"而 EMBEDDING_DIMENSION={self.dimension}。"
+                f"请修正 backend/.env 中的 EMBEDDING_DIMENSION，"
+                f"并执行 migrations/003_embedding_to_pgvector.sql 重建向量列。"
+            )
+
     async def embed_text(self, text: str) -> List[float]:
         """
         将单个文本嵌入到向量中
@@ -41,6 +56,7 @@ class EmbeddingService:
             )
 
             embedding = response.data[0].embedding
+            self._warn_if_dimension_mismatch(embedding)
             logger.debug(f"生成了 {len(embedding)} 维的嵌入")
             return embedding
 
@@ -56,7 +72,7 @@ class EmbeddingService:
             texts: 要嵌入的文本列表
 
         Returns:
-            嵛入向量列表
+            嵌入向量列表
 
         Raises:
             Exception: 如果 API 调用失败
@@ -72,6 +88,8 @@ class EmbeddingService:
             for item in response.data:
                 embeddings[item.index] = item.embedding
 
+            if embeddings and embeddings[0]:
+                self._warn_if_dimension_mismatch(embeddings[0])
             logger.debug(
                 f"生成了 {len(embeddings)} 个嵌入，每个 {len(embeddings[0])} 维"
             )

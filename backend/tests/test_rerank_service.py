@@ -3,8 +3,9 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
-from app.ai.rerank_service import RerankService
+# from app.ai.rerank_service import RerankService
 
+from backend.app.ai.rerank_service import RerankService
 
 @pytest.fixture
 def mock_httpx_client():

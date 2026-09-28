@@ -8,6 +8,7 @@ from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from pgvector.sqlalchemy import Vector
 
+from app.core.config import settings
 from app.core.database import Base
 
 
@@ -96,7 +97,7 @@ class DocumentChunk(Base):
         nullable=False
     )
     embedding: Mapped[list] = mapped_column(
-        Vector(1536),
+        Vector(settings.EMBEDDING_DIMENSION),
         nullable=True
     )
     # 修正：数据库中的字段是 metadata，但在 Python 中应使用 chunk_metadata
@@ -122,7 +123,15 @@ class DocumentChunk(Base):
     # Indexes
     __table_args__ = (
         Index('ix_document_chunks_document_id', 'document_id'),
-        Index('ix_document_chunks_embedding', embedding, postgresql_using='hnsw', postgresql_with={'m': 16, 'ef_construction': 64}),
+        Index(
+            'ix_document_chunks_embedding',
+            embedding,
+            postgresql_using='hnsw',
+            # pgvector 的 vector 类型没有默认 opclass，必须显式指定，
+            # 且需与检索使用的 cosine_distance(<=>) 保持一致
+            postgresql_ops={'embedding': 'vector_cosine_ops'},
+            postgresql_with={'m': 16, 'ef_construction': 64},
+        ),
     )
 
     def __repr__(self) -> str:

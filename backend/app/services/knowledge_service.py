@@ -5,13 +5,11 @@ documents, and document chunks in the RAG system.
 """
 
 import os
-import json
 import logging
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 from uuid import UUID
-from datetime import datetime
 
-from sqlalchemy import select, func, or_
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -360,13 +358,11 @@ class KnowledgeService:
 
             # Create document chunks
             for i, chunk in enumerate(processed.chunks):
-                # Convert embedding list to JSON string for storage
-                embedding_json = json.dumps(embeddings[i])
-
+                # Store embedding directly as vector (pgvector handles conversion)
                 doc_chunk = DocumentChunk(
                     document_id=document_id,
                     content=chunk.content,
-                    embedding=embedding_json,
+                    embedding=embeddings[i],
                     chunk_metadata={
                         'index': chunk.index,
                         'start_char': chunk.start_char,
@@ -423,35 +419,26 @@ class KnowledgeService:
         # Generate query embedding
         query_embedding = await self.embedding_service.embed_text(query.query)
 
-        # Get all chunks in the collection
+        # Use pgvector for similarity search (cosine distance)
+        # cosine_distance returns distance (0-2), similarity = 1 - distance
         result = await self.db.execute(
-            select(DocumentChunk)
+            select(
+                DocumentChunk,
+                (1 - DocumentChunk.embedding.cosine_distance(query_embedding)).label("score")
+            )
             .join(Document)
             .where(Document.collection_id == query.collection_id)
+            .where(DocumentChunk.embedding.isnot(None))
+            .order_by(DocumentChunk.embedding.cosine_distance(query_embedding))
+            .limit(query.top_k)
             .options(selectinload(DocumentChunk.document))
         )
-        chunks = list(result.scalars().all())
-
-        if not chunks:
-            return []
-
-        # Calculate similarity scores
-        scored_chunks = []
-        for chunk in chunks:
-            if chunk.embedding:
-                chunk_embedding = json.loads(chunk.embedding)
-                similarity = self._cosine_similarity(query_embedding, chunk_embedding)
-                scored_chunks.append((chunk, similarity))
-
-        # Sort by similarity (descending)
-        scored_chunks.sort(key=lambda x: x[1], reverse=True)
-
-        # Get top_k results
-        top_results = scored_chunks[:query.top_k]
 
         # Format results
         sources = []
-        for chunk, score in top_results:
+        for row in result:
+            chunk = row[0]
+            score = row[1]
             sources.append(SourceDocument(
                 document_id=chunk.document_id,
                 filename=chunk.document.filename,
@@ -464,34 +451,6 @@ class KnowledgeService:
             f"Found {len(sources)} results for query in collection {query.collection_id}"
         )
         return sources
-
-    def _cosine_similarity(
-        self,
-        vec1: List[float],
-        vec2: List[float]
-    ) -> float:
-        """Calculate cosine similarity between two vectors.
-
-        Args:
-            vec1: First vector.
-            vec2: Second vector.
-
-        Returns:
-            Cosine similarity score.
-        """
-        import math
-
-        if len(vec1) != len(vec2):
-            return 0.0
-
-        dot_product = sum(a * b for a, b in zip(vec1, vec2))
-        magnitude1 = math.sqrt(sum(a * a for a in vec1))
-        magnitude2 = math.sqrt(sum(b * b for b in vec2))
-
-        if magnitude1 == 0 or magnitude2 == 0:
-            return 0.0
-
-        return dot_product / (magnitude1 * magnitude2)
 
     async def get_document_chunks(
         self,
