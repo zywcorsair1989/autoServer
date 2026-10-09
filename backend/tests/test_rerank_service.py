@@ -3,9 +3,9 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
-# from app.ai.rerank_service import RerankService
 
-from backend.app.ai.rerank_service import RerankService
+from app.ai.rerank_service import RerankService
+from app.core.config import settings
 
 @pytest.fixture
 def mock_httpx_client():
@@ -29,9 +29,12 @@ class TestRerankService:
         """Test Rerank Service initializes correctly"""
         service = RerankService()
 
-        assert service.model == "gte-rerank-v2"
-        assert service.api_key == ""
-        assert service.base_url == "https://dashscope.aliyuncs.com/api/v1/services/rerank"
+        assert service.model == settings.BAILIAN_RERANK_MODEL
+        assert service.api_key == settings.BAILIAN_API_KEY
+        # qwen3.7-text-rerank / gte-rerank-v2 系列使用 text-rerank 端点
+        assert service.base_url == (
+            "https://dashscope.aliyuncs.com/api/v1/services/rerank/text-rerank/text-rerank"
+        )
 
     @pytest.mark.asyncio
     async def test_rerank(self, rerank_service, mock_httpx_client):
@@ -132,7 +135,7 @@ class TestRerankService:
         query = "Test query"
         documents = ["Doc 1"]
 
-        with pytest.raises(Exception, match="Rerank API failed: 500"):
+        with pytest.raises(Exception, match="重排 API 失败: 500"):
             await rerank_service.rerank(query, documents)
 
     @pytest.mark.asyncio

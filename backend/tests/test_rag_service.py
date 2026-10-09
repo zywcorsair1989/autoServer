@@ -103,9 +103,9 @@ class TestRAGService:
 
         context = service._build_context(sources)
 
-        assert "[Document 1]" in context
+        assert "[文档 1]" in context
         assert "doc1.pdf" in context
-        assert "[Document 2]" in context
+        assert "[文档 2]" in context
         assert "doc2.pdf" in context
 
     @pytest.mark.asyncio
@@ -117,9 +117,9 @@ class TestRAGService:
         context = "Test context content"
         prompt = service._build_system_prompt(context)
 
-        assert "helpful AI assistant" in prompt
+        assert "专业的AI助手" in prompt
         assert context in prompt
-        assert "cite" in prompt.lower()
+        assert "引用" in prompt
 
     @pytest.mark.asyncio
     async def test_query_with_history(self):

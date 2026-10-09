@@ -15,7 +15,9 @@ class RerankService:
         """使用百炼 API 配置初始化重排服务"""
         self.api_key = settings.BAILIAN_API_KEY
         self.model = settings.BAILIAN_RERANK_MODEL
-        self.base_url = "https://dashscope.aliyuncs.com/api/v1/services/rerank"
+        # qwen3.7-text-rerank / gte-rerank-v2 使用 text-rerank 端点（input/parameters 嵌套结构）；
+        # qwen3-rerank 则用 /compatible-api/v1/reranks 扁平结构，若换模型需同步调整请求体
+        self.base_url = "https://dashscope.aliyuncs.com/api/v1/services/rerank/text-rerank/text-rerank"
         logger.info(f"重排服务使用模型 {self.model} 初始化")
 
     async def rerank(

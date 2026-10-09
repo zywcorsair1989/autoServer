@@ -84,6 +84,8 @@ class SourceDocument(BaseModel):
     content: str
     score: float
     metadata: Optional[Dict[str, Any]] = None
+    # 该源片段引用的图片 URL（如 /uploads/images/{doc_id}/img_xxx.png）
+    images: Optional[List[str]] = None
 
 
 class KnowledgeQueryResponse(BaseModel):

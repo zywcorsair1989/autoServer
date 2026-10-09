@@ -28,6 +28,7 @@ from app.services.chat_service import ChatService
 from app.services.rag_service import RAGService
 from app.ai.llm_service import LLMService
 from app.ai.embedding_service import EmbeddingService
+from app.ai.rerank_service import RerankService
 
 logger = logging.getLogger(__name__)
 
@@ -249,13 +250,17 @@ async def chat(
             rag_service = RAGService(
                 db=db,
                 llm_service=llm_service,
-                embedding_service=embedding_service
+                embedding_service=embedding_service,
+                rerank_service=RerankService()
             )
 
+            # 开启 rerank：向量召回 top15 后用重排模型精排到 top5，
+            # 显著提升“关键词明确但向量分数不突出”片段的召回率（如高德扫街榜）
             response_text, sources = await rag_service.query(
                 query=request.message,
                 collection_id=request.collection_id,
-                user_id=current_user.id
+                user_id=current_user.id,
+                rerank=True
             )
         except Exception as e:
             logger.error(f"RAG 查询失败: {str(e)}")

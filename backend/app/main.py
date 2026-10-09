@@ -2,8 +2,10 @@
 食尚订智能问答系统 - FastAPI 应用程序
 """
 import logging
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 # 配置日志
 logging.basicConfig(
@@ -45,6 +47,11 @@ app.add_middleware(
 
 # 包含 API v1 路由
 app.include_router(api_router, prefix="/api/v1")
+
+# 静态挂载上传目录：检索命中后前端通过 /uploads/images/{doc_id}/xxx 直接访问文档图片
+uploads_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
+os.makedirs(uploads_dir, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
 
 @app.get("/")

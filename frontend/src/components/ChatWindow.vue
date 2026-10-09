@@ -36,6 +36,19 @@
                 <span class="source-score">相关度 {{ formatScore(source.score) }}</span>
               </p>
               <p class="source-content">{{ source.content }}</p>
+              <div v-if="source.images && source.images.length" class="source-images">
+                <a
+                  v-for="(img, imgIdx) in source.images"
+                  :key="imgIdx"
+                  :href="img"
+                  target="_blank"
+                  rel="noopener"
+                  class="source-image-link"
+                  :title="'点击查看大图'"
+                >
+                  <img :src="img" class="source-image" loading="lazy" alt="文档配图" />
+                </a>
+              </div>
             </div>
           </details>
         </div>
@@ -471,6 +484,33 @@ export default {
   -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* 来源配图：缩略图展示，点击新窗口看原图 */
+.source-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.source-image-link {
+  display: inline-flex;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #e5e5ee;
+  transition: border-color 0.15s ease;
+}
+
+.source-image-link:hover {
+  border-color: #667eea;
+}
+
+.source-image {
+  display: block;
+  max-width: 180px;
+  max-height: 120px;
+  object-fit: cover;
 }
 
 /* ============ 输入区 ============ */

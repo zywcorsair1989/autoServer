@@ -72,10 +72,10 @@ class EmbeddingService:
             texts: 要嵌入的文本列表
 
         Returns:
-            嵌入向量列表
+            嵌入向量列表（顺序与输入一致）
 
         Raises:
-            Exception: 如果 API 调用失败
+            Exception: 如果 API 调用失败或返回数量不匹配
         """
         try:
             response = await self.client.embeddings.create(
@@ -83,10 +83,24 @@ class EmbeddingService:
                 input=texts,
             )
 
-            # 按索引排序以确保正确的顺序
-            embeddings = [None] * len(texts)
-            for item in response.data:
-                embeddings[item.index] = item.embedding
+            if len(response.data) != len(texts):
+                raise ValueError(
+                    f"嵌入返回数量不匹配: 输入 {len(texts)} 条, "
+                    f"返回 {len(response.data)} 条"
+                )
+
+            # 按返回顺序对齐（OpenAI 兼容协议保证 data 顺序与输入一致）。
+            # 不能按 item.index 回填：百炼部分模型（实测 qwen3.7-text-embedding-flash）
+            # 批量返回的 item.index 全为 0，按 index 回填会导致向量与文本错位、
+            # 其余位置残留 None，检索结果全部乱命中。
+            for pos, item in enumerate(response.data):
+                if item.index != pos:
+                    logger.warning(
+                        f"嵌入返回项 {pos} 的 index={item.index} 与位置不符，"
+                        f"已按返回顺序对齐"
+                    )
+                    break
+            embeddings = [item.embedding for item in response.data]
 
             if embeddings and embeddings[0]:
                 self._warn_if_dimension_mismatch(embeddings[0])

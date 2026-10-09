@@ -5,7 +5,9 @@ documents, and document chunks in the RAG system.
 """
 
 import os
+import shutil
 import logging
+from pathlib import Path
 from typing import List, Optional
 from uuid import UUID
 
@@ -24,6 +26,11 @@ from app.utils.document_processor import DocumentProcessor
 from app.ai.embedding_service import EmbeddingService
 
 logger = logging.getLogger(__name__)
+
+# 上传文件根目录：backend/uploads（与 docker-compose 挂载的 /app/uploads 一致）
+UPLOADS_DIR = Path(__file__).resolve().parents[2] / "uploads"
+# 图片访问 URL 前缀，与 main.py 中 StaticFiles 挂载路径对应
+IMAGES_URL_PREFIX = "/uploads/images"
 
 
 class KnowledgeService:
@@ -308,6 +315,11 @@ class KnowledgeService:
         if os.path.exists(document.file_path):
             os.remove(document.file_path)
 
+        # 删除该文档提取出的图片目录（uploads/images/{document_id}）
+        image_dir = UPLOADS_DIR / "images" / str(document.id)
+        if image_dir.exists():
+            shutil.rmtree(image_dir, ignore_errors=True)
+
         await self.db.delete(document)
         await self.db.commit()
 
@@ -347,9 +359,11 @@ class KnowledgeService:
             await self.db.commit()
 
             # Process the document
+            # 图片提取到 uploads/images/{document_id}/，供检索命中后返回原图
             processed = self.document_processor.process_file(
                 document.file_path,
-                metadata={'document_id': str(document_id)}
+                metadata={'document_id': str(document_id)},
+                image_dir=str(UPLOADS_DIR / "images" / str(document_id))
             )
 
             # Generate embeddings for each chunk
@@ -439,12 +453,19 @@ class KnowledgeService:
         for row in result:
             chunk = row[0]
             score = row[1]
+            # chunk 元数据中记录的图片文件名转为可访问的 URL
+            chunk_images = (chunk.chunk_metadata or {}).get("images") or []
+            image_urls = [
+                f"{IMAGES_URL_PREFIX}/{chunk.document_id}/{filename}"
+                for filename in chunk_images
+            ]
             sources.append(SourceDocument(
                 document_id=chunk.document_id,
                 filename=chunk.document.filename,
                 content=chunk.content,
                 score=score,
-                metadata=chunk.chunk_metadata
+                metadata=chunk.chunk_metadata,
+                images=image_urls or None
             ))
 
         logger.info(

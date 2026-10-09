@@ -56,7 +56,8 @@ class RAGService:
         user_id: UUID,
         top_k: int = 5,
         rerank: bool = False,
-        temperature: float = 0.7
+        temperature: float = 0.7,
+        score_ratio_threshold: float = 0.5
     ) -> Tuple[str, Optional[List[SourceDocument]]]:
         """执行 RAG 查询。
 
@@ -64,9 +65,14 @@ class RAGService:
             query: 用户的问题。
             collection_id: 要搜索的知识库集合的 UUID。
             user_id: 进行查询的用户的 UUID。
-            top_k: 要检索的文档数量。
+            top_k: 要检索的文档数量上限。
             rerank: 是否重排结果。
             temperature: 生成的 LLM 温度。
+            score_ratio_threshold: 自适应阈值：rerank 后仅保留
+                分数 ≥ 最高分 × 此比例的来源（只在开启 rerank 时生效）。
+                相关内容多时返回满 top_k 条，少时自动只返回 1~2 条，
+                避免无关内容被硬塞进上下文。rerank 分数是请求内相对分，
+                故用相对比例而非绝对阈值。
 
         Returns:
             (回復文本, 源文档列表) 的元组。
@@ -115,7 +121,10 @@ class RAGService:
         # 步骤 2: 可选重排
         if rerank and self.rerank_service:
             documents = [source.content for source in sources]
-            reranked = await self.rerank_service.rerank(query, documents, top_n=top_k)
+            # 多要一倍候选（top_k*2），为自适应阈值过滤留出淘汰空间
+            reranked = await self.rerank_service.rerank(
+                query, documents, top_n=min(top_k * 2, len(documents))
+            )
 
             # 根据重排结果重新排序源
             reranked_sources = []
@@ -124,7 +133,24 @@ class RAGService:
                 source = sources[idx]
                 source.score = item["relevance_score"]
                 reranked_sources.append(source)
-            sources = reranked_sources
+
+            # 自适应阈值：只保留分数 ≥ 最高分 × score_ratio_threshold 的来源。
+            # 最高分自身必然保留；无相关内容时（最高分也极低）则至少保留第 1 条，
+            # 走“上下文没有答案”的回答路径而不是空上下文。
+            if reranked_sources:
+                best_score = reranked_sources[0].score
+                threshold = best_score * score_ratio_threshold
+                kept = [
+                    s for s in reranked_sources[:top_k]
+                    if s.score >= threshold
+                ]
+                dropped = len(reranked_sources[:top_k]) - len(kept)
+                if dropped:
+                    logger.info(
+                        f"自适应阈值过滤：rerank 候选 {len(reranked_sources)} 条，"
+                        f"阈值 {threshold:.3f}，淘汰 {dropped} 条低相关来源"
+                    )
+                sources = kept
 
         # 步骤 3: 从检索的文档建立上下文
         context = self._build_context(sources)
@@ -176,7 +202,9 @@ class RAGService:
             "1. 必须基于上下文文档中的事实回答，不要编造信息\n"
             "2. 如果上下文中没有答案，请明确告知用户\n"
             "3. 引用时使用 [文档名] 格式标注来源\n"
-            "4. 保持专业严谨的回答风格\n\n"
+            "4. 保持专业严谨的回答风格\n"
+            "5. 上下文中形如 [图片: 文件名] 的标记表示该位置有配图（会展示给用户），"
+            "涉及操作步骤或界面功能时可提示用户展开引用来源查看配图\n\n"
             f"上下文：\n{context}"
         )
 
